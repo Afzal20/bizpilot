@@ -33,6 +33,32 @@ Note: the bundled `sites` data migration is Postgres-specific; on SQLite fake it
 with `uv run python manage.py migrate sites --fake`. Production uses PostgreSQL
 via Docker Compose (Postgres 16 + Redis + Mailpit).
 
+## Internationalization (English + বাংলা)
+
+- Supported languages are declared in `config/settings/base.py` (`LANGUAGES`).
+- `LocaleMiddleware` resolves the language from cookie / `Accept-Language`.
+- Source strings are marked in templates (`{% translate %}`) and Python (`gettext_lazy`).
+- Bangla catalog: `locale/bn/LC_MESSAGES/django.po` (compiled `.mo` is committed so
+  CI/production need no gettext).
+
+After adding or changing translatable strings:
+
+```bash
+python manage.py makemessages -l bn --ignore=.venv/* --ignore=staticfiles/*
+# ...fill in translations in locale/bn/LC_MESSAGES/django.po...
+python manage.py compilemessages
+```
+
+Users switch language via the navbar selector (POSTs to `/i18n/setlang/`, the
+Django `set_language` view).
+
+## Admin theme (django-unfold)
+
+The admin uses [django-unfold](https://unfoldadmin.com). `"unfold"` is listed
+before `django.contrib.admin` in `INSTALLED_APPS`, and admin classes inherit
+`unfold.admin.ModelAdmin` (e.g. `UserAdmin(auth_admin.UserAdmin, ModelAdmin)`).
+Registrations/fieldsets structure is unchanged — only base classes differ.
+
 ## Milestones
 
 Follows `docs/DJANGO_MIGRATION_PLAN.md` §8. Current status: **M1 Scaffold — done**

@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% load static %}
+{% load i18n static %}
 
 {% block title %}
-  User: 
+  {% translate "User" %}:
   
     {{ object.name }}
   
@@ -25,13 +25,13 @@
     <!-- Action buttons -->
     <div class="row">
       <div class="col-sm-12">
-        <a class="btn btn-primary" href="{% url 'users:update' %}" role="button">My Info</a>
+        <a class="btn btn-primary" href="{% url 'users:update' %}" role="button">{% translate "My Info" %}</a>
         <a class="btn btn-primary"
            href="{% url 'account_email' %}"
-           role="button">E-Mail</a>
+           role="button">{% translate "E-Mail" %}</a>
         <a class="btn btn-primary"
            href="{% url 'mfa_index' %}"
-           role="button">MFA</a>
+           role="button">{% translate "MFA" %}</a>
         <!-- Your Stuff: Custom user template urls -->
       </div>
     </div>

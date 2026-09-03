@@ -16,6 +16,8 @@ urlpatterns = [
         TemplateView.as_view(template_name="pages/about.html"),
         name="about",
     ),
+    # i18n: language switcher endpoint (POST here to change the session language)
+    path("i18n/", include("django.conf.urls.i18n")),
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
     # User management

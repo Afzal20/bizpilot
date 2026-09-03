@@ -48,6 +48,8 @@ coverage.xml
 
 # Translations
 *.mo
+# Compiled Bangla catalogs are committed so CI (docker) needs no gettext
+!locale/**/*.mo
 *.pot
 
 # Django stuff:

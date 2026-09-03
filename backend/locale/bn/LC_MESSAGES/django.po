@@ -1,0 +1,165 @@
+# BizPilot — Bangla (bn) translation catalog.
+# Regenerate source strings with:
+#   python manage.py makemessages -l bn --ignore=.venv/* --ignore=staticfiles/*
+# Compile with:
+#   python manage.py compilemessages
+msgid ""
+msgstr ""
+"Project-Id-Version: BizPilot 0.1.0\n"
+"Report-Msgid-Bugs-To: team@bizpilot.com\n"
+"PO-Revision-Date: 2026-09-03 23:40+0600\n"
+"Last-Translator: BizPilot Team <team@bizpilot.com>\n"
+"Language: bn\n"
+"Language-Team: BizPilot Bangla <team@bizpilot.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: config/settings/base.py
+msgid "English"
+msgstr "ইংরেজি"
+
+#: config/settings/base.py
+msgid "Bangla"
+msgstr "বাংলা"
+
+#: config/settings/base.py
+msgid "BizPilot Admin"
+msgstr "BizPilot অ্যাডমিন"
+
+#: config/settings/base.py
+msgid "BizPilot Administration"
+msgstr "BizPilot প্রশাসন"
+
+#: bizpilot/users/apps.py
+msgid "Users"
+msgstr "ব্যবহারকারীবৃন্দ"
+
+#: bizpilot/users/models.py
+msgid "Name of User"
+msgstr "ব্যবহারকারীর নাম"
+
+#: bizpilot/users/models.py
+msgid "email address"
+msgstr "ইমেইল ঠিকানা"
+
+#: bizpilot/users/forms.py
+msgid "This email has already been taken."
+msgstr "এই ইমেইলটি ইতিমধ্যে ব্যবহৃত হয়েছে।"
+
+#: bizpilot/users/views.py
+msgid "Information successfully updated"
+msgstr "তথ্য সফলভাবে হালনাগাদ হয়েছে"
+
+#: bizpilot/users/admin.py
+msgid "Personal info"
+msgstr "ব্যক্তিগত তথ্য"
+
+#: bizpilot/users/admin.py
+msgid "Permissions"
+msgstr "অনুমতিসমূহ"
+
+#: bizpilot/users/admin.py
+msgid "Important dates"
+msgstr "গুরুত্বপূর্ণ তারিখসমূহ"
+
+#: bizpilot/templates/base.html
+msgid "Toggle navigation"
+msgstr "নেভিগেশন টগল করুন"
+
+#: bizpilot/templates/base.html
+msgid "Home"
+msgstr "হোম"
+
+#: bizpilot/templates/base.html
+msgid "About"
+msgstr "সম্পর্কে"
+
+#: bizpilot/templates/base.html
+msgid "My Profile"
+msgstr "আমার প্রোফাইল"
+
+#: bizpilot/templates/base.html
+msgid "Sign Out"
+msgstr "সাইন আউট"
+
+#: bizpilot/templates/base.html
+msgid "Sign Up"
+msgstr "সাইন আপ"
+
+#: bizpilot/templates/base.html
+msgid "Sign In"
+msgstr "সাইন ইন"
+
+#: bizpilot/templates/base.html
+msgid "Language"
+msgstr "ভাষা"
+
+#: bizpilot/templates/base.html
+msgid "Change"
+msgstr "পরিবর্তন করুন"
+
+#: bizpilot/templates/base.html
+msgid "Close"
+msgstr "বন্ধ করুন"
+
+#: bizpilot/templates/base.html
+msgid "Use this document as a way to quick start any new project."
+msgstr "নতুন যেকোনো প্রকল্প দ্রুত শুরু করার জন্য এই ডকুমেন্টটি ব্যবহার করুন।"
+
+#: bizpilot/templates/users/user_detail.html
+msgid "User"
+msgstr "ব্যবহারকারী"
+
+#: bizpilot/templates/users/user_detail.html
+msgid "My Info"
+msgstr "আমার তথ্য"
+
+#: bizpilot/templates/users/user_detail.html
+msgid "E-Mail"
+msgstr "ইমেইল"
+
+#: bizpilot/templates/users/user_detail.html
+msgid "MFA"
+msgstr "এমএফএ"
+
+#: bizpilot/templates/users/user_form.html
+msgid "Update"
+msgstr "হালনাগাদ করুন"
+
+#: bizpilot/templates/403.html bizpilot/templates/403_csrf.html
+msgid "Forbidden (403)"
+msgstr "নিষিদ্ধ (403)"
+
+#: bizpilot/templates/403.html bizpilot/templates/403_csrf.html
+msgid "You're not allowed to access this page."
+msgstr "আপনার এই পৃষ্ঠাটি দেখার অনুমতি নেই।"
+
+#: bizpilot/templates/404.html
+msgid "Page not found"
+msgstr "পৃষ্ঠাটি খুঁজে পাওয়া যায়নি"
+
+#: bizpilot/templates/404.html
+msgid "This is not the page you were looking for."
+msgstr "এটি আপনার খোঁজা পৃষ্ঠাটি নয়।"
+
+#: bizpilot/templates/500.html
+msgid "Server Error"
+msgstr "সার্ভার ত্রুটি"
+
+#: bizpilot/templates/500.html
+msgid "Ooops!!! 500"
+msgstr "উফ! ৫০০"
+
+#: bizpilot/templates/500.html
+msgid "Looks like something went wrong!"
+msgstr "মনে হচ্ছে কিছু একটা সমস্যা হয়েছে!"
+
+#: bizpilot/templates/500.html
+msgid ""
+"We track these errors automatically, but if the problem persists feel free "
+"to contact us. In the meantime, try refreshing."
+msgstr ""
+"আমরা এই ত্রুটিগুলো স্বয়ংক্রিয়ভাবে ট্র্যাক করি, তবে সমস্যা চলতে থাকলে নির্দ্বিধায় "
+"আমাদের সাথে যোগাযোগ করুন। এর মধ্যে পুনরায় লোড করার চেষ্টা করুন।"

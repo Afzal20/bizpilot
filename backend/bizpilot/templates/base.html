@@ -65,17 +65,17 @@
                 data-bs-target="#navbarSupportedContent"
                 aria-controls="navbarSupportedContent"
                 aria-expanded="false"
-                aria-label="Toggle navigation">
+                aria-label="{% translate 'Toggle navigation' %}">
           <span class="navbar-toggler-icon"></span>
         </button>
         <a class="navbar-brand" href="{% url 'home' %}">BizPilot</a>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
-              <a class="nav-link" href="{% url 'home' %}">Home <span class="visually-hidden">(current)</span></a>
+              <a class="nav-link" href="{% url 'home' %}">{% translate "Home" %} <span class="visually-hidden">(current)</span></a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'about' %}">About</a>
+              <a class="nav-link" href="{% url 'about' %}">{% translate "About" %}</a>
             </li>
             {% if request.user.is_authenticated %}
               <li class="nav-item">
@@ -98,6 +98,32 @@
                 <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">{% translate "Sign In" %}</a>
               </li>
             {% endif %}
+            <li class="nav-item">
+              {# i18n: switch between English and Bangla #}
+              <form class="d-flex align-items-center ms-md-2 my-1"
+                    action="{% url 'set_language' %}"
+                    method="post">
+                {% csrf_token %}
+                <input name="next" type="hidden" value="{{ request.path }}" />
+                {% get_current_language as CURRENT_LANGUAGE %}
+                {% get_available_languages as AVAILABLE_LANGUAGES %}
+                {% get_language_info_list for AVAILABLE_LANGUAGES as languages %}
+                <select name="language"
+                        class="form-select form-select-sm"
+                        aria-label="{% translate 'Language' %}"
+                        onchange="this.form.submit()">
+                  {% for language in languages %}
+                    <option value="{{ language.code }}"
+                            {% if language.code == CURRENT_LANGUAGE %}selected{% endif %}>
+                      {{ language.name_local }}
+                    </option>
+                  {% endfor %}
+                </select>
+                <noscript>
+                  <button type="submit" class="btn btn-sm btn-outline-secondary ms-1">{% translate "Change" %}</button>
+                </noscript>
+              </form>
+            </li>
           </ul>
         </div>
       </div>
@@ -111,13 +137,13 @@
           <button type="button"
                   class="btn-close"
                   data-bs-dismiss="alert"
-                  aria-label="Close"></button>
+                  aria-label="{% translate 'Close' %}"></button>
         </div>
       {% endfor %}
     {% endif %}
     {% block main %}
       {% block content %}
-        <p>Use this document as a way to quick start any new project.</p>
+        <p>{% translate "Use this document as a way to quick start any new project." %}</p>
       {% endblock content %}
     {% endblock main %}
 
