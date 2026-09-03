@@ -1,0 +1,82 @@
+volumes:
+  bizpilot_local_postgres_data: {}
+  bizpilot_local_postgres_data_backups: {}
+  bizpilot_local_redis_data: {}
+
+services:
+  django: &django
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    image: bizpilot_local_django
+    container_name: bizpilot_local_django
+    depends_on:
+      - postgres
+      - redis
+      - mailpit
+    volumes:
+      - /app/.venv
+      - .:/app:z
+    env_file:
+      - path: ./.envs/.local/.django
+        required: false
+      - path: ./.envs/.local/.postgres
+        required: false
+    ports:
+      - '8000:8000'
+    command: /start
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: bizpilot_production_postgres
+    container_name: bizpilot_local_postgres
+    volumes:
+      - bizpilot_local_postgres_data:/var/lib/postgresql/data
+      - bizpilot_local_postgres_data_backups:/backups
+    env_file:
+      - path: ./.envs/.local/.postgres
+        required: false
+
+  mailpit:
+    image: docker.io/axllent/mailpit:latest
+    container_name: bizpilot_local_mailpit
+    ports:
+      - "8025:8025"
+
+  redis:
+    image: docker.io/redis:7.2
+    container_name: bizpilot_local_redis
+    volumes:
+      - bizpilot_local_redis_data:/data
+
+  celeryworker:
+    <<: *django
+    image: bizpilot_local_celeryworker
+    container_name: bizpilot_local_celeryworker
+    depends_on:
+      - redis
+      - postgres
+      - mailpit
+    ports: []
+    command: /start-celeryworker
+
+  celerybeat:
+    <<: *django
+    image: bizpilot_local_celerybeat
+    container_name: bizpilot_local_celerybeat
+    depends_on:
+      - redis
+      - postgres
+      - mailpit
+    ports: []
+    command: /start-celerybeat
+
+  flower:
+    <<: *django
+    image: bizpilot_local_flower
+    container_name: bizpilot_local_flower
+    ports:
+      - '5555:5555'
+    command: /start-flower

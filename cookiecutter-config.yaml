@@ -1,0 +1,32 @@
+# Reproducible scaffold configuration for the BizPilot backend.
+# Re-generate anytime with:
+#   cookiecutter gh:pydanny/cookiecutter-django --config-file cookiecutter-config.yaml --no-input -o /tmp
+# Choices follow docs/DJANGO_MIGRATION_PLAN.md §2.1 (technology decisions).
+default_context:
+  project_name: "BizPilot"
+  project_slug: "bizpilot"
+  description: "BizPilot - Django REST API backend for a mini-ERP SaaS (invoicing, clients, inventory, expenses, teams, billing)."
+  author_name: "BizPilot Team"
+  domain_name: "bizpilot.com"
+  email: "team@bizpilot.com"
+  version: "0.1.0"
+  open_source_license: "Not open source"
+  username_type: "email"          # Supabase-parity email-based auth
+  timezone: "UTC"
+  windows: "n"
+  editor: "VS Code"
+  use_docker: "y"                 # M1 exit criteria: Docker Compose up (Postgres + Redis + Mailpit)
+  postgresql_version: "16"
+  cloud_provider: "AWS"           # plan: email via SES (or Resend later via anymail)
+  mail_service: "Amazon SES"
+  rest_api: "DRF"                 # Django REST Framework + drf-spectacular OpenAPI 3
+  use_async: "n"                  # DRF is sync; background work goes through Celery
+  frontend_pipeline: "None"       # API-only backend; Next.js remains the frontend
+  use_celery: "y"                 # recurring invoices, emails, Stripe webhook handlers, AI batching
+  mail_catcher: "Mailpit"
+  use_sentry: "y"                 # plan §2.1 monitoring
+  use_whitenoise: "n"             # API-only, no static file pipeline
+  use_heroku: "n"
+  ci_tool: "Github"               # ruff + mypy + pytest + coverage gate (plan §10.4)
+  keep_local_envs_in_vcs: "y"     # local env files hold only dummy values
+  debug: "n"

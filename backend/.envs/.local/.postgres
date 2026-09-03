@@ -1,0 +1,7 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=bizpilot
+POSTGRES_USER=HMcgzRICXnOJawHKSjYUlaDQlEWeZNjz
+POSTGRES_PASSWORD=WkhbXR8J047bDmFcxn1HAzONUC6qO7uaOwkxNZSg8MvyB7eHe8A1JRhJs9xwUzEm

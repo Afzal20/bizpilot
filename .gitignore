@@ -1,0 +1,35 @@
+# Separate git repos living in the workspace (not part of this monorepo)
+invoive_generator-next/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/launch.json
+!.vscode/settings.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Django / app state
+*.sqlite3
+db.sqlite3
+staticfiles/
+media/
+
+# Env & secrets
+.env
+.envs/.local/.postgres
+!backend/.envs/.local/.django
+!backend/.envs/.local/.postgres.example
+
+# Node (tooling only)
+node_modules/
+
+# Docs build
+docs/_build/
+backend/docs/_build/
