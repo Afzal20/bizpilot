@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import UTC
+from datetime import datetime
 from typing import TYPE_CHECKING
 from typing import Any
 
@@ -39,8 +41,14 @@ def create_checkout_session(
     sub = get_or_create_free_subscription(organization)
 
     target_price_id = price_id.strip() if price_id else ""
-    if not target_price_id or target_price_id.lower() in ("pro", "monthly", "pro_monthly"):
-        target_price_id = getattr(settings, "STRIPE_PRO_PRICE_ID", "") or target_price_id
+    if not target_price_id or target_price_id.lower() in (
+        "pro",
+        "monthly",
+        "pro_monthly",
+    ):
+        target_price_id = (
+            getattr(settings, "STRIPE_PRO_PRICE_ID", "") or target_price_id
+        )
     elif target_price_id.lower() in ("yearly", "annual", "pro_yearly", "pro_annual"):
         target_price_id = (
             getattr(settings, "STRIPE_PRO_YEARLY_PRICE_ID", "")
@@ -60,11 +68,7 @@ def create_checkout_session(
         if price_mapping:
             target_price_id = price_mapping.stripe_price_id
 
-    plan_code = (
-        price_mapping.plan.code
-        if price_mapping
-        else ("pro" if target_price_id == getattr(settings, "STRIPE_PRO_PRICE_ID", "") else "pro")
-    )
+    plan_code = price_mapping.plan.code if price_mapping else "pro"
 
     session_kwargs: dict[str, Any] = {
         "payment_method_types": ["card"],
@@ -118,7 +122,12 @@ def sync_checkout_session(
     """Retrieve a completed checkout session from Stripe and sync org subscription."""
     get_stripe_client()
     session = stripe.checkout.Session.retrieve(session_id)
-    session_data = session.to_dict() if hasattr(session, "to_dict") else dict(session)
+    if isinstance(session, dict):
+        session_data: dict[str, Any] = session
+    elif hasattr(session, "to_dict"):
+        session_data = session.to_dict()
+    else:
+        session_data = getattr(session, "__dict__", {})
     _process_checkout_completed({"object": session_data})
 
     if organization:
@@ -194,16 +203,16 @@ def _process_subscription_updated(event_data: dict[str, Any]) -> None:
 
     period_start = stripe_sub.get("current_period_start")
     if period_start:
-        sub.current_period_start = timezone.datetime.fromtimestamp(
+        sub.current_period_start = datetime.fromtimestamp(
             period_start,
-            tz=timezone.utc,
+            tz=UTC,
         )
 
     period_end = stripe_sub.get("current_period_end")
     if period_end:
-        sub.current_period_end = timezone.datetime.fromtimestamp(
+        sub.current_period_end = datetime.fromtimestamp(
             period_end,
-            tz=timezone.utc,
+            tz=UTC,
         )
 
     sub.save()
