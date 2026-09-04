@@ -49,7 +49,12 @@ LOCALE_PATHS = [str(BASE_DIR / "locale")]
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
 
 if os.getenv("DATABASE_URL", default=None):
-    DATABASES = {"default": env.db("DATABASE_URL")}
+    DATABASES = {
+        "default": {
+            **env.db("DATABASE_URL"),
+            "ATOMIC_REQUESTS": True,
+        },
+    }
 else:
     DATABASES = {
         "default": {
@@ -59,10 +64,9 @@ else:
             "PASSWORD": env.str("POSTGRES_PASSWORD", default="bizpilot"),
             "HOST": env.str("POSTGRES_HOST", default="postgres"),
             "PORT": env.str("POSTGRES_PORT", default="5432"),
+            "ATOMIC_REQUESTS": True,
         },
     }
-
-DATABASES["default"]["ATOMIC_REQUESTS"] = True
 # https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-DEFAULT_AUTO_FIELD
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
