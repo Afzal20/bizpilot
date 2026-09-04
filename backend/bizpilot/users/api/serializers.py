@@ -14,7 +14,7 @@ from bizpilot.users.models import User
 class ProfileSerializer(serializers.ModelSerializer[Profile]):
     """Serializer for user profile preferences and defaults."""
 
-    class Meta:
+    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
         model = Profile
         fields = [
             "full_name",
@@ -36,7 +36,7 @@ class ProfileSerializer(serializers.ModelSerializer[Profile]):
 class UserSerializer(serializers.ModelSerializer[User]):
     """Default user serializer for the cookiecutter viewset."""
 
-    class Meta:
+    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
         model = User
         fields = ["name", "url"]
         extra_kwargs = {
@@ -50,7 +50,7 @@ class CurrentUserSerializer(serializers.ModelSerializer[User]):
     profile = ProfileSerializer(read_only=True)
     memberships = serializers.SerializerMethodField()
 
-    class Meta:
+    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
         model = User
         fields = [
             "id",

@@ -51,8 +51,12 @@ class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, GenericV
     lookup_field = "pk"
 
     def get_queryset(self, *args: Any, **kwargs: Any) -> Any:
-        assert isinstance(self.request.user.id, int)
-        return self.queryset.filter(id=self.request.user.id)
+        user = self.request.user
+        assert isinstance(user, User)
+        assert isinstance(user.id, int)
+        queryset = self.queryset
+        assert queryset is not None
+        return queryset.filter(id=user.id)
 
     @action(detail=False)
     def me(self, request: Request) -> Response:

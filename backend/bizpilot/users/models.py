@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from typing import Any
 from typing import ClassVar
 
 from django.contrib.auth.models import AbstractUser
@@ -18,6 +20,12 @@ class User(AbstractUser):
     If adding fields that need to be filled at user signup,
     check forms.SignupForm and forms.SocialSignupForms accordingly.
     """
+
+    if TYPE_CHECKING:
+        id: int
+        pk: int
+        profile: Profile
+        memberships: Any
 
     # First and last name do not cover name patterns around the globe
     name = models.CharField(_("Name of User"), blank=True, max_length=255)

@@ -78,8 +78,9 @@ def custom_exception_handler(
     instance = request.build_absolute_uri() if request else ""
     detail_str, error_code, invalid_params = _parse_error_details(response.data)
 
-    if hasattr(exc, "get_codes"):
-        codes = exc.get_codes()
+    get_codes = getattr(exc, "get_codes", None)
+    if callable(get_codes):
+        codes = get_codes()
         if isinstance(codes, str):
             error_code = codes
 
