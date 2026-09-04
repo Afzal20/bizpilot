@@ -9,6 +9,16 @@ BizPilot - Django REST API backend for a mini-ERP SaaS (invoicing, clients, inve
 
 Moved to [settings](https://cookiecutter-django.readthedocs.io/en/latest/1-getting-started/settings.html).
 
+## API Documentation
+
+The backend exposes OpenAPI schema documentation through drf-spectacular:
+
+- Schema: `/api/schema/`
+- Swagger UI: `/api/docs/`
+- ReDoc: `/api/redoc/`
+
+By default, these endpoints are restricted to admin users.
+
 ## Basic Commands
 
 ### Setting Up Your Users
