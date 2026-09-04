@@ -278,3 +278,6 @@ bizpilot/media/
 .env
 .envs/*
 !.envs/.local/
+*.sqlite3
+db.sqlite3
+

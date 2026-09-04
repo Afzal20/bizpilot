@@ -1,6 +1,5 @@
 # ruff: noqa: E501
 """Base settings to build other settings files upon."""
-import os
 import ssl
 from datetime import timedelta
 from pathlib import Path
@@ -48,25 +47,16 @@ LOCALE_PATHS = [str(BASE_DIR / "locale")]
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
 
-if os.getenv("DATABASE_URL", default=None):
-    DATABASES = {
-        "default": {
-            **env.db("DATABASE_URL"),
-            "ATOMIC_REQUESTS": True,
-        },
-    }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": env.str("POSTGRES_DB", default="bizpilot"),
-            "USER": env.str("POSTGRES_USER", default="bizpilot"),
-            "PASSWORD": env.str("POSTGRES_PASSWORD", default="bizpilot"),
-            "HOST": env.str("POSTGRES_HOST", default="postgres"),
-            "PORT": env.str("POSTGRES_PORT", default="5432"),
-            "ATOMIC_REQUESTS": True,
-        },
-    }
+_db_config = env.db(
+    "DATABASE_URL",
+    default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+)
+_is_sqlite = _db_config.get("ENGINE", "").endswith("sqlite3")
+_db_config["ATOMIC_REQUESTS"] = not _is_sqlite
+
+DATABASES = {
+    "default": _db_config,
+}
 # https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-DEFAULT_AUTO_FIELD
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
