@@ -29,6 +29,7 @@ dependencies = [
   "django-storages[s3]==1.14.6",
   "django-unfold>=0.104.1",
   "djangorestframework==3.18.0",
+  "djangorestframework-simplejwt>=5.4.0",
   "drf-spectacular==0.30.0",
   "flower==2.1.0",
   "gunicorn==26.2.0",
