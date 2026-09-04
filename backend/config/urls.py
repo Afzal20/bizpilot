@@ -9,6 +9,9 @@ from drf_spectacular.views import SpectacularAPIView
 from drf_spectacular.views import SpectacularSwaggerView
 from rest_framework.authtoken.views import obtain_auth_token
 
+from bizpilot.users.api.urls import auth_patterns
+from bizpilot.users.api.urls import me_patterns
+
 urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
     path(
@@ -31,6 +34,9 @@ urlpatterns = [
 
 # API URLS
 urlpatterns += [
+    # API v1
+    path("api/v1/auth/", include((auth_patterns, "auth_api"), namespace="v1-auth")),
+    path("api/v1/", include((me_patterns, "me_api"), namespace="v1-me")),
     # API base url
     path("api/", include("config.api_router")),
     # DRF auth token

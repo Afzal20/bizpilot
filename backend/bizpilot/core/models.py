@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 
 from django.conf import settings
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -55,7 +56,12 @@ class AuditLog(models.Model):
     action = models.CharField(_("action"), max_length=64, db_index=True)
     target_model = models.CharField(_("target model"), max_length=128, db_index=True)
     target_id = models.CharField(_("target id"), max_length=128, db_index=True)
-    changes_diff = models.JSONField(_("changes diff"), default=dict, blank=True)
+    changes_diff = models.JSONField(
+        _("changes diff"),
+        default=dict,
+        blank=True,
+        encoder=DjangoJSONEncoder,
+    )
     ip_address = models.GenericIPAddressField(_("ip address"), null=True, blank=True)
     user_agent = models.CharField(_("user agent"), max_length=512, blank=True)
     created_at = models.DateTimeField(_("created at"), auto_now_add=True, db_index=True)
