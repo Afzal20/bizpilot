@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING
 from typing import Any
-import uuid
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
@@ -26,6 +25,8 @@ from bizpilot.orgs.models import Permission
 from bizpilot.orgs.models import Role
 
 if TYPE_CHECKING:
+    import uuid
+
     from bizpilot.users.models import User
 
 
@@ -33,7 +34,7 @@ def seed_permissions() -> int:
     """Seed or update the fixed RBAC v2 permission catalog in the database."""
     created_or_updated = 0
     for perm_data in PERMISSION_CATALOG:
-        _, created = Permission.objects.update_or_create(
+        _perm_obj, created = Permission.objects.update_or_create(
             codename=perm_data["codename"],
             defaults={
                 "resource": perm_data["resource"],
@@ -47,20 +48,20 @@ def seed_permissions() -> int:
 
 
 def seed_system_roles_for_org(organization: Organization) -> dict[str, Role]:
-    """Create default system roles (owner, admin, editor, viewer) for an organization."""
+    """Create default system roles (owner, admin, editor, viewer) for an org."""
     seed_permissions()
     all_perms = {p.codename: p for p in Permission.objects.all()}
     created_roles: dict[str, Role] = {}
 
     role_descriptions = {
         SYSTEM_ROLE_OWNER: "Full control over all organization resources and billing",
-        SYSTEM_ROLE_ADMIN: "Full operational and team management access except org deletion",
-        SYSTEM_ROLE_EDITOR: "Create, edit, and manage operational ERP records and AI tools",
+        SYSTEM_ROLE_ADMIN: "Operational and team management access except org deletion",
+        SYSTEM_ROLE_EDITOR: "Create, edit, and manage ERP records and AI tools",
         SYSTEM_ROLE_VIEWER: "Read-only access across ERP records and business reports",
     }
 
     for role_name in SYSTEM_ROLES:
-        role, _ = Role.objects.get_or_create(
+        role, _created = Role.objects.get_or_create(
             organization=organization,
             name=role_name,
             defaults={
@@ -70,9 +71,7 @@ def seed_system_roles_for_org(organization: Organization) -> dict[str, Role]:
         )
         target_perm_codenames = SYSTEM_ROLE_PERMISSIONS.get(role_name, [])
         target_perms = [
-            all_perms[code]
-            for code in target_perm_codenames
-            if code in all_perms
+            all_perms[code] for code in target_perm_codenames if code in all_perms
         ]
         role.permissions.set(target_perms)
         created_roles[role_name] = role
@@ -81,7 +80,7 @@ def seed_system_roles_for_org(organization: Organization) -> dict[str, Role]:
 
 
 @transaction.atomic
-def create_organization(
+def create_organization(  # noqa: PLR0913
     *,
     name: str,
     owner: User,
@@ -95,7 +94,7 @@ def create_organization(
     default_notes: str = "",
     default_terms: str = "",
 ) -> Organization:
-    """Create an organization, seed default system roles, and assign owner membership."""
+    """Create an organization, seed default system roles, and assign owner."""
     organization = Organization.objects.create(
         name=name,
         owner=owner,
@@ -127,12 +126,18 @@ def create_organization(
     return organization
 
 
-def get_permission_cache_key(user_id: int | uuid.UUID, organization_id: uuid.UUID | str) -> str:
+def get_permission_cache_key(
+    user_id: int | uuid.UUID,
+    organization_id: uuid.UUID | str,
+) -> str:
     """Generate cache key for resolved user permissions within an organization."""
     return f"org_perms:{organization_id}:{user_id}"
 
 
-def resolve_user_permissions(user_id: int, organization_id: uuid.UUID | str) -> set[str]:
+def resolve_user_permissions(
+    user_id: int,
+    organization_id: uuid.UUID | str,
+) -> set[str]:
     """
     Resolve effective permissions for a user within an organization.
     Uses Redis/local cache with 5-minute TTL and invalidation on role/membership change.
@@ -166,7 +171,7 @@ def resolve_user_permissions(user_id: int, organization_id: uuid.UUID | str) -> 
 
     # Aggregate permissions across all assigned roles
     resolved = set(
-        membership.roles.values_list("permissions__codename", flat=True)
+        membership.roles.values_list("permissions__codename", flat=True),
     )
     cache.set(cache_key, list(resolved), timeout=300)
     return resolved
@@ -176,7 +181,7 @@ def invalidate_permission_cache(
     user_id: int | uuid.UUID | None,
     organization_id: uuid.UUID | str,
 ) -> None:
-    """Invalidate cached permissions for a specific user or all members of an organization."""
+    """Invalidate cached permissions for a user or all members of an org."""
     if user_id is not None:
         cache.delete(get_permission_cache_key(user_id, organization_id))
     else:
@@ -210,7 +215,9 @@ def create_invite(
         email=normalized_email,
         status=Membership.Status.ACTIVE,
     ).exists():
-        msg = _("User with this email is already an active member of this organization.")
+        msg = _(
+            "User with this email is already an active member of this organization.",
+        )
         raise ValidationError(msg)
 
     roles = list(Role.objects.filter(organization=organization, id__in=role_ids))
@@ -237,7 +244,7 @@ def create_invite(
         )
         invite.roles.set(roles)
 
-        membership, _ = Membership.objects.get_or_create(
+        membership, _created = Membership.objects.get_or_create(
             organization=organization,
             email=normalized_email,
             defaults={
@@ -370,7 +377,7 @@ def update_member_roles(
         Role.objects.filter(
             organization_id=organization_id,
             id__in=role_ids,
-        )
+        ),
     )
 
     new_has_owner = any(r.name == SYSTEM_ROLE_OWNER for r in roles)

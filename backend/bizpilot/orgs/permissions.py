@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-from typing import Any
 import uuid
+from typing import TYPE_CHECKING
 
 from rest_framework import permissions
 from rest_framework.exceptions import PermissionDenied
 
+from bizpilot.orgs.models import Membership
 from bizpilot.orgs.services import resolve_user_permissions
 
 if TYPE_CHECKING:
@@ -18,15 +18,16 @@ def get_org_id_from_request_or_view(request: Request, view: APIView) -> str | No
     """Extract organization UUID from URL parameters, query parameters, or headers."""
     kwargs = getattr(view, "kwargs", {})
     org_id = (
-        kwargs.get("org_id")
-        or kwargs.get("organization_id")
-        or kwargs.get("org_pk")
+        kwargs.get("org_id") or kwargs.get("organization_id") or kwargs.get("org_pk")
     )
     if org_id:
         return str(org_id)
 
     # Detail route of Organization itself where pk is the org ID
-    if getattr(view, "basename", "") in ("organization", "org", "v1-orgs") and "pk" in kwargs:
+    if (
+        getattr(view, "basename", "") in ("organization", "org", "v1-orgs")
+        and "pk" in kwargs
+    ):
         return str(kwargs["pk"])
 
     query_org = request.query_params.get("org_id") or request.query_params.get("org")
@@ -58,8 +59,9 @@ class OrgPermission(permissions.BasePermission):
         # Validate UUID format
         try:
             uuid.UUID(str(org_id))
-        except ValueError:
-            raise PermissionDenied("Invalid organization identifier.")
+        except ValueError as err:
+            msg = "Invalid organization identifier."
+            raise PermissionDenied(msg) from err
 
         required_perm = self._get_required_permission(request, view)
         if not required_perm:
@@ -74,15 +76,15 @@ class OrgPermission(permissions.BasePermission):
         if "*" in effective_perms or required_perm in effective_perms:
             return True
 
-        # Raise explicit PermissionDenied with missing permission info for RFC 7807 handler
-        raise PermissionDenied({
-            "detail": f"You do not have the required permission: {required_perm}",
-            "required_permission": required_perm,
-            "organization_id": str(org_id),
-        })
+        # Raise PermissionDenied with missing permission info for RFC 7807 handler
+        msg = f"You do not have the required permission: {required_perm}"
+        raise PermissionDenied(
+            msg,
+            code="permission_denied",
+        )
 
     def _get_required_permission(self, request: Request, view: APIView) -> str | None:
-        """Inspect view attributes for explicit required permission or permission map."""
+        """Inspect view attributes for explicit permission or permission map."""
         # 1. Check explicit required_permission on view
         explicit_perm = getattr(view, "required_permission", None)
         if explicit_perm:
@@ -118,10 +120,8 @@ class IsOrgMember(permissions.BasePermission):
         if not user_id:
             return False
 
-        effective_perms = resolve_user_permissions(user_id, org_id)
+        resolve_user_permissions(user_id, org_id)
         # Any resolved permissions (or empty set if not member)
-        from bizpilot.orgs.models import Membership
-
         return Membership.objects.filter(
             user_id=user_id,
             organization_id=org_id,

@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from typing import Any
 import uuid
+from typing import Any
 
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions
 from rest_framework import viewsets
 from rest_framework.exceptions import NotFound
-from rest_framework.exceptions import PermissionDenied
 
 from bizpilot.orgs.models import Organization
 from bizpilot.orgs.permissions import OrgPermission
@@ -28,11 +27,13 @@ class OrgScopedViewSet(viewsets.ModelViewSet):
         """Extract and validate the current organization UUID from request context."""
         raw_id = get_org_id_from_request_or_view(self.request, self)
         if not raw_id:
-            raise NotFound("Organization context is required for this operation.")
+            msg = "Organization context is required for this operation."
+            raise NotFound(msg)
         try:
             return uuid.UUID(str(raw_id))
-        except ValueError:
-            raise NotFound("Invalid organization identifier.")
+        except ValueError as err:
+            msg = "Invalid organization identifier."
+            raise NotFound(msg) from err
 
     def get_organization(self) -> Organization:
         """Retrieve the Organization model instance for the active scope."""

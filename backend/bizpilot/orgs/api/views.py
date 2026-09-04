@@ -1,11 +1,10 @@
 from __future__ import annotations
 
+import uuid
 from typing import TYPE_CHECKING
 from typing import Any
-import uuid
 
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.shortcuts import get_object_or_404
 from rest_framework import permissions
 from rest_framework import status
 from rest_framework import viewsets
@@ -40,10 +39,10 @@ from bizpilot.orgs.services import resolve_user_permissions
 from bizpilot.orgs.services import seed_permissions
 from bizpilot.orgs.services import update_member_roles
 from bizpilot.orgs.viewsets import OrgScopedViewSet
+from bizpilot.users.models import User as UserModel
 
 if TYPE_CHECKING:
     from rest_framework.request import Request
-    from bizpilot.users.models import User
 
 
 class OrganizationViewSet(viewsets.ModelViewSet):
@@ -60,7 +59,9 @@ class OrganizationViewSet(viewsets.ModelViewSet):
         "destroy": "organization.delete",
     }
 
-    def get_serializer_class(self) -> type[OrganizationSerializer | OrganizationCreateSerializer]:
+    def get_serializer_class(
+        self,
+    ) -> type[OrganizationSerializer | OrganizationCreateSerializer]:
         if self.action == "create":
             return OrganizationCreateSerializer
         return OrganizationSerializer
@@ -82,9 +83,6 @@ class OrganizationViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = request.user
-        assert isinstance(user, object)
-
-        from bizpilot.users.models import User as UserModel
         assert isinstance(user, UserModel)
 
         org = create_organization(
@@ -111,7 +109,8 @@ class OrganizationViewSet(viewsets.ModelViewSet):
         if instance.owner_id != getattr(user, "id", None):
             perms = resolve_user_permissions(user.id, instance.id)  # type: ignore[union-attr]
             if "organization.delete" not in perms and "*" not in perms:
-                raise PermissionDenied("Only the organization owner can delete the organization.")
+                msg = "Only the organization owner can delete the organization."
+                raise PermissionDenied(msg)
 
         instance.is_active = False
         instance.save(update_fields=["is_active"])
@@ -121,7 +120,11 @@ class MembershipViewSet(OrgScopedViewSet):
     """Viewset for managing organization members and their role assignments."""
 
     serializer_class = MembershipSerializer
-    queryset = Membership.objects.all().select_related("user", "organization").prefetch_related("roles__permissions")
+    queryset = (
+        Membership.objects.all()
+        .select_related("user", "organization")
+        .prefetch_related("roles__permissions")
+    )
     permission_map = {
         "list": "team.view",
         "retrieve": "team.view",
@@ -135,7 +138,6 @@ class MembershipViewSet(OrgScopedViewSet):
         instance = self.get_object()
         org_id = self.get_organization_id()
         user = request.user
-        from bizpilot.users.models import User as UserModel
         assert isinstance(user, UserModel)
 
         try:
@@ -145,7 +147,8 @@ class MembershipViewSet(OrgScopedViewSet):
                 actor=user,
             )
         except DjangoValidationError as exc:
-            raise ValidationError(exc.message if hasattr(exc, "message") else str(exc))
+            msg = exc.message if hasattr(exc, "message") else str(exc)
+            raise ValidationError(msg) from exc
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -157,7 +160,6 @@ class MembershipViewSet(OrgScopedViewSet):
         serializer.is_valid(raise_exception=True)
 
         user = request.user
-        from bizpilot.users.models import User as UserModel
         assert isinstance(user, UserModel)
 
         try:
@@ -168,7 +170,8 @@ class MembershipViewSet(OrgScopedViewSet):
                 actor=user,
             )
         except DjangoValidationError as exc:
-            raise ValidationError(exc.message if hasattr(exc, "message") else str(exc))
+            msg = exc.message if hasattr(exc, "message") else str(exc)
+            raise ValidationError(msg) from exc
 
         output_serializer = MembershipSerializer(updated_membership)
         return Response(output_serializer.data, status=status.HTTP_200_OK)
@@ -190,7 +193,9 @@ class RoleViewSet(OrgScopedViewSet):
 
     def get_queryset(self) -> Any:
         org_id = self.get_organization_id()
-        return Role.objects.filter(organization_id=org_id).prefetch_related("permissions")
+        return Role.objects.filter(organization_id=org_id).prefetch_related(
+            "permissions",
+        )
 
     def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         org_id = self.get_organization_id()
@@ -204,7 +209,7 @@ class RoleViewSet(OrgScopedViewSet):
             description=data.get("description", ""),
             is_system=False,
         )
-        if "resolved_permissions" in data and data["resolved_permissions"]:
+        if data.get("resolved_permissions"):
             role.permissions.set(data["resolved_permissions"])
 
         output_serializer = RoleSerializer(role)
@@ -218,7 +223,8 @@ class RoleViewSet(OrgScopedViewSet):
         data = serializer.validated_data
         if "name" in data:
             if role.is_system and data["name"] != role.name:
-                raise ValidationError("System roles cannot be renamed.")
+                msg = "System roles cannot be renamed."
+                raise ValidationError(msg)
             role.name = data["name"]
 
         if "description" in data:
@@ -226,7 +232,8 @@ class RoleViewSet(OrgScopedViewSet):
 
         if "resolved_permissions" in data:
             if role.is_system and role.name == "owner":
-                raise ValidationError("Permissions on the owner role cannot be modified.")
+                msg = "Permissions on the owner role cannot be modified."
+                raise ValidationError(msg)
             role.permissions.set(data["resolved_permissions"])
 
         role.save()
@@ -236,10 +243,12 @@ class RoleViewSet(OrgScopedViewSet):
     def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         role = self.get_object()
         if role.is_system:
-            raise ValidationError("System default roles cannot be deleted.")
+            msg = "System default roles cannot be deleted."
+            raise ValidationError(msg)
 
         if role.memberships.filter(status=Membership.Status.ACTIVE).exists():
-            raise ValidationError("Cannot delete role that is currently assigned to active members.")
+            msg = "Cannot delete role that is currently assigned to active members."
+            raise ValidationError(msg)
 
         role.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -275,7 +284,6 @@ class InviteViewSet(OrgScopedViewSet):
         serializer.is_valid(raise_exception=True)
 
         user = request.user
-        from bizpilot.users.models import User as UserModel
         assert isinstance(user, UserModel)
 
         data = serializer.validated_data
@@ -288,7 +296,8 @@ class InviteViewSet(OrgScopedViewSet):
                 department=data.get("department", ""),
             )
         except DjangoValidationError as exc:
-            raise ValidationError(exc.message if hasattr(exc, "message") else str(exc))
+            msg = exc.message if hasattr(exc, "message") else str(exc)
+            raise ValidationError(msg) from exc
 
         output_serializer = InviteSerializer(invite)
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)
@@ -304,7 +313,6 @@ class InviteAcceptView(APIView):
         serializer.is_valid(raise_exception=True)
 
         user = request.user
-        from bizpilot.users.models import User as UserModel
         assert isinstance(user, UserModel)
 
         try:
@@ -313,7 +321,8 @@ class InviteAcceptView(APIView):
                 user=user,
             )
         except DjangoValidationError as exc:
-            raise ValidationError(exc.message if hasattr(exc, "message") else str(exc))
+            msg = exc.message if hasattr(exc, "message") else str(exc)
+            raise ValidationError(msg) from exc
 
         output_serializer = MembershipSerializer(membership)
         return Response(
@@ -326,10 +335,7 @@ class InviteAcceptView(APIView):
 
 
 class MyPermissionsView(APIView):
-    """
-    Returns effective permissions for the authenticated user in the requested organization.
-    Feeds frontend capability-based UI gating hooks (usePermissions).
-    """
+    """Returns effective permissions for user in requested organization."""
 
     permission_classes = [permissions.IsAuthenticated]
 
@@ -340,8 +346,10 @@ class MyPermissionsView(APIView):
 
         try:
             uuid.UUID(str(org_id))
-        except ValueError:
-            raise ValidationError({"org": "Invalid organization UUID format."})
+        except ValueError as err:
+            raise ValidationError(
+                {"org": "Invalid organization UUID format."},
+            ) from err
 
         user = request.user
         assert user.is_authenticated

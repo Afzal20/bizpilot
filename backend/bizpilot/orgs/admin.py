@@ -26,7 +26,14 @@ class RoleInline(TabularInline):
 
 @admin.register(Organization)
 class OrganizationAdmin(ModelAdmin):
-    list_display = ["name", "slug", "owner", "default_currency", "is_active", "created_at"]
+    list_display = [
+        "name",
+        "slug",
+        "owner",
+        "default_currency",
+        "is_active",
+        "created_at",
+    ]
     search_fields = ["name", "slug", "owner__email", "company_email"]
     list_filter = ["is_active", "default_currency", "created_at"]
     inlines = [MembershipInline, RoleInline]

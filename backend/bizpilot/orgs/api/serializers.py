@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import Any
-import uuid
 
 from rest_framework import serializers
 
@@ -45,7 +44,13 @@ class RoleSerializer(serializers.ModelSerializer[Role]):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "organization", "is_system", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "organization",
+            "is_system",
+            "created_at",
+            "updated_at",
+        ]
 
     def get_permission_codenames(self, obj: Role) -> list[str]:
         return list(obj.permissions.values_list("codename", flat=True))

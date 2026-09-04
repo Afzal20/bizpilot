@@ -4,7 +4,6 @@ from typing import Final
 
 # Complete RBAC v2 Permission Catalog (40+ permissions across resources)
 PERMISSION_CATALOG: Final[list[dict[str, str]]] = [
-    # Invoices (7)
     {
         "codename": "invoices.view",
         "resource": "invoices",
@@ -47,7 +46,6 @@ PERMISSION_CATALOG: Final[list[dict[str, str]]] = [
         "action": "cancel",
         "description": "Cancel invoices and restore stock",
     },
-    # Clients (4)
     {
         "codename": "clients.view",
         "resource": "clients",
@@ -72,7 +70,6 @@ PERMISSION_CATALOG: Final[list[dict[str, str]]] = [
         "action": "delete",
         "description": "Delete clients",
     },
-    # Products / Inventory (5)
     {
         "codename": "products.view",
         "resource": "products",
@@ -103,7 +100,6 @@ PERMISSION_CATALOG: Final[list[dict[str, str]]] = [
         "action": "adjust_stock",
         "description": "Adjust product inventory stock quantities",
     },
-    # Expenses (4)
     {
         "codename": "expenses.view",
         "resource": "expenses",
@@ -128,7 +124,6 @@ PERMISSION_CATALOG: Final[list[dict[str, str]]] = [
         "action": "delete",
         "description": "Delete expense records",
     },
-    # Payments (3)
     {
         "codename": "payments.view",
         "resource": "payments",
@@ -147,7 +142,6 @@ PERMISSION_CATALOG: Final[list[dict[str, str]]] = [
         "action": "delete",
         "description": "Delete or reverse payment records",
     },
-    # Reports & Exports (3)
     {
         "codename": "reports.view",
         "resource": "reports",
@@ -166,7 +160,6 @@ PERMISSION_CATALOG: Final[list[dict[str, str]]] = [
         "action": "download",
         "description": "Download generated reports and export archives",
     },
-    # Team Management (4)
     {
         "codename": "team.view",
         "resource": "team",
@@ -191,7 +184,6 @@ PERMISSION_CATALOG: Final[list[dict[str, str]]] = [
         "action": "remove",
         "description": "Remove members from the organization",
     },
-    # Organization Settings (3)
     {
         "codename": "organization.view",
         "resource": "organization",
@@ -210,7 +202,6 @@ PERMISSION_CATALOG: Final[list[dict[str, str]]] = [
         "action": "delete",
         "description": "Delete organization and all associated data",
     },
-    # Billing & Subscriptions (2)
     {
         "codename": "billing.view",
         "resource": "billing",
@@ -221,9 +212,8 @@ PERMISSION_CATALOG: Final[list[dict[str, str]]] = [
         "codename": "billing.manage",
         "resource": "billing",
         "action": "manage",
-        "description": "Manage subscription plans, payment methods, and customer portal",
+        "description": "Manage subscriptions, payment methods, and portal",
     },
-    # AI Platform (2)
     {
         "codename": "ai.use_assistant",
         "resource": "ai",
@@ -236,14 +226,12 @@ PERMISSION_CATALOG: Final[list[dict[str, str]]] = [
         "action": "generate",
         "description": "Generate line items, descriptions, and OCR data using AI",
     },
-    # Audit Log (1)
     {
         "codename": "audit_log.view",
         "resource": "audit_log",
         "action": "view",
         "description": "View organization audit trail and activity log",
     },
-    # Custom Roles Entitlement (1)
     {
         "codename": "custom_roles.manage",
         "resource": "custom_roles",

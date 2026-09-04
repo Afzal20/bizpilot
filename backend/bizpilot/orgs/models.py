@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from decimal import Decimal
 import secrets
+from decimal import Decimal
 from typing import TYPE_CHECKING
 from typing import Any
-import uuid
 
 from django.conf import settings
 from django.db import models
@@ -17,11 +16,10 @@ from bizpilot.core.models import UUIDModel
 
 if TYPE_CHECKING:
     from django.db.models.manager import RelatedManager
-    from bizpilot.users.models import User
 
 
 class Organization(UUIDModel, TimestampedModel):
-    """Business organization / company entity scoping all business and operational data."""
+    """Business organization entity scoping all business data."""
 
     name = models.CharField(_("organization name"), max_length=255)
     slug = models.SlugField(_("slug"), max_length=255, unique=True, blank=True)
@@ -59,14 +57,14 @@ class Organization(UUIDModel, TimestampedModel):
         _("Stripe customer ID"),
         max_length=255,
         blank=True,
-        null=True,
+        default="",
         db_index=True,
     )
     stripe_subscription_id = models.CharField(
         _("Stripe subscription ID"),
         max_length=255,
         blank=True,
-        null=True,
+        default="",
     )
     is_active = models.BooleanField(_("is active"), default=True)
 
@@ -89,9 +87,7 @@ class Organization(UUIDModel, TimestampedModel):
             candidate = base_slug
             counter = 1
             while (
-                Organization.objects.filter(slug=candidate)
-                .exclude(pk=self.pk)
-                .exists()
+                Organization.objects.filter(slug=candidate).exclude(pk=self.pk).exists()
             ):
                 candidate = f"{base_slug}-{counter}"
                 counter += 1
@@ -110,7 +106,12 @@ class Permission(models.Model):
     )
     resource = models.CharField(_("resource"), max_length=50, db_index=True)
     action = models.CharField(_("action"), max_length=50)
-    description = models.CharField(_("description"), max_length=255, blank=True, default="")
+    description = models.CharField(
+        _("description"),
+        max_length=255,
+        blank=True,
+        default="",
+    )
     created_at = models.DateTimeField(_("created at"), auto_now_add=True)
 
     if TYPE_CHECKING:
@@ -194,7 +195,12 @@ class Membership(UUIDModel, TimestampedModel):
     )
     email = models.EmailField(_("email address"), db_index=True)
     name = models.CharField(_("member name"), max_length=255, blank=True, default="")
-    department = models.CharField(_("department"), max_length=100, blank=True, default="")
+    department = models.CharField(
+        _("department"),
+        max_length=100,
+        blank=True,
+        default="",
+    )
     roles = models.ManyToManyField(
         Role,
         related_name="memberships",
@@ -241,7 +247,7 @@ class Membership(UUIDModel, TimestampedModel):
 
 
 class Invite(UUIDModel, TimestampedModel):
-    """Cryptographically tokenized invitation for onboarding members to an organization."""
+    """Tokenized invitation for onboarding members to an organization."""
 
     organization = models.ForeignKey(
         Organization,
@@ -256,14 +262,24 @@ class Invite(UUIDModel, TimestampedModel):
         blank=True,
         verbose_name=_("roles"),
     )
-    department = models.CharField(_("department"), max_length=100, blank=True, default="")
+    department = models.CharField(
+        _("department"),
+        max_length=100,
+        blank=True,
+        default="",
+    )
     invited_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="created_invites",
         verbose_name=_("invited by"),
     )
-    token = models.CharField(_("invitation token"), max_length=64, unique=True, db_index=True)
+    token = models.CharField(
+        _("invitation token"),
+        max_length=64,
+        unique=True,
+        db_index=True,
+    )
     expires_at = models.DateTimeField(_("expires at"))
     accepted_at = models.DateTimeField(_("accepted at"), null=True, blank=True)
 

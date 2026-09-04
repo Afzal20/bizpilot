@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import timedelta
 import uuid
+from datetime import timedelta
 
 from django.test import TestCase
 from django.utils import timezone
@@ -18,7 +18,7 @@ class OrganizationModelTest(TestCase):
     def setUp(self) -> None:
         self.user = User.objects.create_user(
             email="orgowner@example.com",
-            password="testpassword123",
+            password="testpassword123",  # noqa: S106
             name="Org Owner",
         )
 
@@ -27,15 +27,15 @@ class OrganizationModelTest(TestCase):
             name="Acme Corp",
             owner=self.user,
         )
-        self.assertEqual(org.slug, "acme-corp")
-        self.assertEqual(str(org), "Acme Corp")
-        self.assertIsInstance(org.id, uuid.UUID)
+        assert org.slug == "acme-corp"
+        assert str(org) == "Acme Corp"
+        assert isinstance(org.id, uuid.UUID)
 
     def test_duplicate_name_generates_unique_slug(self) -> None:
         org1 = Organization.objects.create(name="Beta Company", owner=self.user)
         org2 = Organization.objects.create(name="Beta Company", owner=self.user)
-        self.assertEqual(org1.slug, "beta-company")
-        self.assertEqual(org2.slug, "beta-company-1")
+        assert org1.slug == "beta-company"
+        assert org2.slug == "beta-company-1"
 
 
 class RoleAndPermissionModelTest(TestCase):
@@ -46,18 +46,18 @@ class RoleAndPermissionModelTest(TestCase):
             action="test",
             description="Test invoice permission",
         )
-        self.assertEqual(str(perm), "invoices.test")
+        assert str(perm) == "invoices.test"
 
     def test_role_str(self) -> None:
         role = Role.objects.create(name="Custom Manager")
-        self.assertIn("Custom Manager", str(role))
+        assert "Custom Manager" in str(role)
 
 
 class MembershipAndInviteModelTest(TestCase):
     def setUp(self) -> None:
         self.user = User.objects.create_user(
             email="member@example.com",
-            password="testpassword123",
+            password="testpassword123",  # noqa: S106
             name="Member User",
         )
         self.org = Organization.objects.create(name="Gamma Labs", owner=self.user)
@@ -69,8 +69,8 @@ class MembershipAndInviteModelTest(TestCase):
             email=self.user.email,
             status=Membership.Status.ACTIVE,
         )
-        self.assertTrue(membership.is_owner)
-        self.assertIn(self.user.email, str(membership))
+        assert membership.is_owner
+        assert self.user.email in str(membership)
 
     def test_invite_validity_and_expiry(self) -> None:
         now = timezone.now()
@@ -81,8 +81,8 @@ class MembershipAndInviteModelTest(TestCase):
             token=Invite.generate_token(),
             expires_at=now + timedelta(days=7),
         )
-        self.assertTrue(invite.is_valid)
-        self.assertFalse(invite.is_expired)
+        assert invite.is_valid
+        assert not invite.is_expired
 
         expired_invite = Invite.objects.create(
             organization=self.org,
@@ -91,5 +91,5 @@ class MembershipAndInviteModelTest(TestCase):
             token=Invite.generate_token(),
             expires_at=now - timedelta(days=1),
         )
-        self.assertTrue(expired_invite.is_expired)
-        self.assertFalse(expired_invite.is_valid)
+        assert expired_invite.is_expired
+        assert not expired_invite.is_valid
