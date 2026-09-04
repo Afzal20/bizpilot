@@ -60,6 +60,13 @@ before `django.contrib.admin` in `INSTALLED_APPS`, and admin classes inherit
 Registrations/fieldsets structure is unchanged — only base classes differ.
 
 ## Milestones
-
-Follows `docs/DJANGO_MIGRATION_PLAN.md` §8. Current status: **M1 Scaffold — done**
-(CI via GitHub Actions: ruff + mypy + pytest + coverage; Docker Compose; OpenAPI served by drf-spectacular).
+ 
+Follows `docs/DJANGO_MIGRATION_PLAN.md` §8. Current status:
+- **M1: Scaffold** — Done (CI ruff + mypy + pytest, Docker Compose, OpenAPI).
+- **M2: Authentication & Users** — Done (SimpleJWT, profiles, OAuth, password reset).
+- **M3: Organizations & RBAC v2** — Done (Fixed permission catalog, system & custom roles, memberships, invites).
+- **M4: Domain APIs (ERP Core & Reports)** — Done (Clients, products, invoices, payments, expenses, auto-numbering, stock management, analytics).
+- **M5: Billing & Subscriptions** — Done (Stripe checkout/portal/webhooks, tiered entitlements, usage metering).
+- **M7: AI Platform** — Done (Provider gateway, line item generation, conversational assistant, token metering).
+- **M8: Transactional Email & PDF** — Done (Branded HTML templates, ReportLab PDF generator, Celery async dispatch).
+- **M9: Data Migration & Production Hardening** — Done (Supabase SQL/live migration, reconciliation suite, tenant isolation & security verification).
