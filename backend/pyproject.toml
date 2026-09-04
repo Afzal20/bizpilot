@@ -40,6 +40,7 @@ dependencies = [
   "redis==8.1.0",
   "sentry-sdk==2.68.1",
   "stripe>=11.0.0",
+  "requests>=2.31.0",
 ]
 
 [dependency-groups]
