@@ -28,6 +28,7 @@ auth_patterns = [
         name="password-reset-confirm",
     ),
     path("invites/claim/", ClaimPendingInvitesView.as_view(), name="invites-claim"),
+    path("me/", MeView.as_view(), name="auth-me"),
 ]
 
 me_patterns = [

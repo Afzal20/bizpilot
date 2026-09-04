@@ -173,7 +173,7 @@ class Invoice(UUIDModel, TimestampedModel):
         default=Status.DRAFT,
         db_index=True,
     )
-    issue_date = models.DateField(_("issue date"), default=timezone.now)
+    issue_date = models.DateField(_("issue date"), default=timezone.localdate)
     due_date = models.DateField(_("due date"))
     currency = models.CharField(_("currency"), max_length=3, default="USD")
 
@@ -383,7 +383,7 @@ class Payment(UUIDModel, TimestampedModel):
         choices=PaymentMethod.choices,
         default=PaymentMethod.BANK_TRANSFER,
     )
-    payment_date = models.DateField(_("payment date"), default=timezone.now)
+    payment_date = models.DateField(_("payment date"), default=timezone.localdate)
     reference = models.CharField(
         _("reference number"),
         max_length=255,
@@ -454,7 +454,7 @@ class Expense(UUIDModel, TimestampedModel):
         default=Decimal("0.00"),
     )
     currency = models.CharField(_("currency"), max_length=3, default="USD")
-    expense_date = models.DateField(_("expense date"), default=timezone.now)
+    expense_date = models.DateField(_("expense date"), default=timezone.localdate)
     payment_method = models.CharField(
         _("payment method"),
         max_length=50,
