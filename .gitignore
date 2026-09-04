@@ -1,5 +1,6 @@
 # Separate git repos living in the workspace (not part of this monorepo)
 invoive_generator-next/
+.playwright-mcp/
 
 # OS / editor
 .DS_Store

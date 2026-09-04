@@ -9,6 +9,7 @@ from bizpilot.orgs.models import Membership
 from bizpilot.orgs.models import Organization
 from bizpilot.orgs.models import Permission
 from bizpilot.orgs.models import Role
+from bizpilot.orgs.constants import SYSTEM_ROLE_VIEWER
 
 
 class PermissionSerializer(serializers.ModelSerializer[Permission]):
@@ -132,7 +133,35 @@ class MembershipUpdateRolesSerializer(serializers.Serializer):
     role_ids = serializers.ListField(
         child=serializers.UUIDField(),
         min_length=1,
+        required=False,
     )
+    role = serializers.CharField(required=False, allow_blank=False)
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        role_ids = list(attrs.get("role_ids", []))
+        role_name = attrs.get("role")
+        if not role_ids and role_name:
+            org_id = self.context.get("organization_id")
+            if org_id is None:
+                msg = "Organization context is required."
+                raise serializers.ValidationError(msg)
+
+            system_role = Role.objects.filter(
+                organization_id=org_id,
+                name=role_name,
+            ).first()
+            if system_role is None:
+                msg = f"Unknown role: {role_name}"
+                raise serializers.ValidationError(msg)
+
+            role_ids = [system_role.id]
+
+        if not role_ids:
+            msg = "At least one role is required."
+            raise serializers.ValidationError(msg)
+
+        attrs["role_ids"] = role_ids
+        return attrs
 
 
 class InviteSerializer(serializers.ModelSerializer[Invite]):
@@ -177,6 +206,31 @@ class InviteCreateSerializer(serializers.Serializer):
         required=False,
         default=list,
     )
+    role = serializers.CharField(required=False, allow_blank=False)
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        role_ids = list(attrs.get("role_ids", []))
+        role_name = attrs.get("role")
+        if not role_ids and role_name:
+            org_id = self.context.get("organization_id")
+            if org_id is None:
+                msg = "Organization context is required."
+                raise serializers.ValidationError(msg)
+
+            system_role = Role.objects.filter(
+                organization_id=org_id,
+                name=role_name,
+            ).first()
+            if system_role is None:
+                system_role = Role.objects.filter(
+                    organization_id=org_id,
+                    name=SYSTEM_ROLE_VIEWER,
+                ).first()
+            if system_role is not None:
+                role_ids = [system_role.id]
+
+        attrs["role_ids"] = role_ids
+        return attrs
 
 
 class InviteAcceptSerializer(serializers.Serializer):

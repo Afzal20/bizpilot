@@ -156,7 +156,10 @@ class MembershipViewSet(OrgScopedViewSet):
     def update_roles(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         instance = self.get_object()
         org_id = self.get_organization_id()
-        serializer = MembershipUpdateRolesSerializer(data=request.data)
+        serializer = MembershipUpdateRolesSerializer(
+            data=request.data,
+            context={"organization_id": org_id},
+        )
         serializer.is_valid(raise_exception=True)
 
         user = request.user
@@ -280,7 +283,10 @@ class InviteViewSet(OrgScopedViewSet):
 
     def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         org = self.get_organization()
-        serializer = InviteCreateSerializer(data=request.data)
+        serializer = InviteCreateSerializer(
+            data=request.data,
+            context={"organization_id": org.id},
+        )
         serializer.is_valid(raise_exception=True)
 
         user = request.user
