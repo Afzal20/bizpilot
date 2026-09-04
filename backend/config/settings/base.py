@@ -103,6 +103,7 @@ LOCAL_APPS = [
     "bizpilot.users",
     "bizpilot.orgs",
     "bizpilot.erp",
+    "bizpilot.billing",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -400,3 +401,13 @@ UNFOLD = {
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+STRIPE_SECRET_KEY = env.str("STRIPE_SECRET_KEY", default="sk_test_placeholder")
+STRIPE_PUBLISHABLE_KEY = env.str(
+    "STRIPE_PUBLISHABLE_KEY",
+    default="pk_test_placeholder",
+)
+STRIPE_WEBHOOK_SECRET = env.str(
+    "STRIPE_WEBHOOK_SECRET",
+    default="whsec_placeholder",
+)
+BILLING_ENFORCEMENT = env.bool("BILLING_ENFORCEMENT", default=False)

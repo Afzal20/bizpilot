@@ -123,6 +123,10 @@ def create_organization(  # noqa: PLR0913
     membership.roles.add(owner_role)
 
     invalidate_permission_cache(owner.pk, organization.pk)
+
+    from bizpilot.billing.engine import get_or_create_free_subscription  # noqa: PLC0415
+
+    get_or_create_free_subscription(organization)
     return organization
 
 
@@ -207,7 +211,9 @@ def create_invite(
     invited_by: User,
     department: str = "",
 ) -> Invite:
-    """Create a tokenized invitation and register a pending membership."""
+    from bizpilot.billing.engine import enforce  # noqa: PLC0415
+
+    enforce(organization, "max_team_members")
     normalized_email = email.strip().lower()
 
     if Membership.objects.filter(

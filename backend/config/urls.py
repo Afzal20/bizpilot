@@ -39,6 +39,7 @@ urlpatterns += [
     path("api/v1/", include((me_patterns, "me_api"), namespace="v1-me")),
     path("api/v1/", include("bizpilot.orgs.api.urls", namespace="v1-orgs")),
     path("api/v1/", include("bizpilot.erp.api.urls", namespace="v1-erp")),
+    path("api/v1/", include("bizpilot.billing.api.urls", namespace="v1-billing")),
     # API base url
     path("api/", include("config.api_router")),
     # DRF auth token

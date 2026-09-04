@@ -39,6 +39,7 @@ dependencies = [
   "python-slugify==8.0.4",
   "redis==8.1.0",
   "sentry-sdk==2.68.1",
+  "stripe>=11.0.0",
 ]
 
 [dependency-groups]

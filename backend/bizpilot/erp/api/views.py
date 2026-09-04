@@ -10,6 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from bizpilot.billing.engine import enforce
 from bizpilot.erp.api.serializers import AdjustStockSerializer
 from bizpilot.erp.api.serializers import ClientSerializer
 from bizpilot.erp.api.serializers import ClientWithStatsSerializer
@@ -65,6 +66,11 @@ class ClientViewSet(OrgScopedViewSet):
         stats_data = get_client_stats(client)
         return Response(stats_data)
 
+    def perform_create(self, serializer: Any) -> None:
+        org = self.get_organization()
+        enforce(org, "max_clients")
+        super().perform_create(serializer)
+
 
 class ProductViewSet(OrgScopedViewSet):
     queryset = Product.objects.all()
@@ -101,6 +107,11 @@ class ProductViewSet(OrgScopedViewSet):
         )
         return Response(ProductSerializer(updated_product).data)
 
+    def perform_create(self, serializer: Any) -> None:
+        org = self.get_organization()
+        enforce(org, "max_products")
+        super().perform_create(serializer)
+
 
 class InvoiceViewSet(OrgScopedViewSet):
     queryset = Invoice.objects.prefetch_related("items", "payments").select_related(
@@ -122,6 +133,11 @@ class InvoiceViewSet(OrgScopedViewSet):
         "cancel": "invoices.cancel",
         "add_payment": "invoices.record_payment",
     }
+
+    def perform_create(self, serializer: Any) -> None:
+        org = self.get_organization()
+        enforce(org, "max_invoices_per_month")
+        super().perform_create(serializer)
 
     def get_queryset(self) -> Any:
         qs = super().get_queryset()
