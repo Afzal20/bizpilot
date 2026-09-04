@@ -446,6 +446,10 @@ STRIPE_PRO_PRICE_ID = env.str(
     "STRIPE_PRO_PRICE_ID",
     default=env.str("NEXT_PUBLIC_STRIPE_PRO_PRICE_ID", default=""),
 )
+STRIPE_PRO_YEARLY_PRICE_ID = env.str(
+    "STRIPE_PRO_YEARLY_PRICE_ID",
+    default=env.str("NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID", default=""),
+)
 STRIPE_WEBHOOK_SECRET = env.str(
     "STRIPE_WEBHOOK_SECRET",
     default="whsec_placeholder",

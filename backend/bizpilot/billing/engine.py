@@ -130,6 +130,18 @@ def seed_default_plans() -> None:
                         "is_active": True,
                     },
                 )
+            pro_yearly_id = getattr(settings, "STRIPE_PRO_YEARLY_PRICE_ID", "") or "price_1UBHQeLoTyOsviCMGed4mMyp"
+            if pro_yearly_id:
+                PriceMapping.objects.update_or_create(
+                    stripe_price_id=pro_yearly_id,
+                    defaults={
+                        "plan": plan,
+                        "interval": PriceMapping.Interval.YEAR,
+                        "amount": Decimal("90.00"),
+                        "currency": "USD",
+                        "is_active": True,
+                    },
+                )
 
 
 def get_or_create_free_subscription(organization: Organization) -> Subscription:

@@ -39,8 +39,13 @@ def create_checkout_session(
     sub = get_or_create_free_subscription(organization)
 
     target_price_id = price_id.strip() if price_id else ""
-    if not target_price_id or target_price_id.lower() == "pro":
+    if not target_price_id or target_price_id.lower() in ("pro", "monthly", "pro_monthly"):
         target_price_id = getattr(settings, "STRIPE_PRO_PRICE_ID", "") or target_price_id
+    elif target_price_id.lower() in ("yearly", "annual", "pro_yearly", "pro_annual"):
+        target_price_id = (
+            getattr(settings, "STRIPE_PRO_YEARLY_PRICE_ID", "")
+            or "price_1UBHQeLoTyOsviCMGed4mMyp"
+        )
 
     price_mapping = PriceMapping.objects.filter(
         stripe_price_id=target_price_id,
