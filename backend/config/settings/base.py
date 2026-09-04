@@ -434,7 +434,17 @@ UNFOLD = {
 STRIPE_SECRET_KEY = env.str("STRIPE_SECRET_KEY", default="sk_test_placeholder")
 STRIPE_PUBLISHABLE_KEY = env.str(
     "STRIPE_PUBLISHABLE_KEY",
-    default="pk_test_placeholder",
+    default=env.str(
+        "STRIPE_PUBLIC_KEY",
+        default=env.str(
+            "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+            default="pk_test_placeholder",
+        ),
+    ),
+)
+STRIPE_PRO_PRICE_ID = env.str(
+    "STRIPE_PRO_PRICE_ID",
+    default=env.str("NEXT_PUBLIC_STRIPE_PRO_PRICE_ID", default=""),
 )
 STRIPE_WEBHOOK_SECRET = env.str(
     "STRIPE_WEBHOOK_SECRET",

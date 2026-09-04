@@ -131,3 +131,29 @@ class BillingAPITest(APITestCase):
         sub.refresh_from_db()
         assert sub.plan.code == "free"
         assert sub.status == Subscription.Status.CANCELED
+
+    @patch("stripe.checkout.Session.retrieve")
+    def test_sync_checkout_session(self, mock_retrieve: MagicMock) -> None:
+        mock_retrieve.return_value = {
+            "id": "cs_test_sync_123",
+            "client_reference_id": str(self.org.id),
+            "customer": "cus_sync_abc",
+            "subscription": "sub_sync_xyz",
+            "metadata": {
+                "organization_id": str(self.org.id),
+                "plan_code": "pro",
+            },
+        }
+        self.client.force_authenticate(user=self.owner)
+        url = f"/api/v1/orgs/{self.org.id}/billing/sync-checkout/"
+        payload = {"session_id": "cs_test_sync_123"}
+        res = self.client.post(url, payload, format="json")
+        assert res.status_code == status.HTTP_200_OK
+        assert res.data["status"] == "synced"
+        assert res.data["plan"] == "pro"
+
+        sub = Subscription.objects.get(organization=self.org)
+        assert sub.plan.code == "pro"
+        assert sub.stripe_customer_id == "cus_sync_abc"
+        assert sub.stripe_subscription_id == "sub_sync_xyz"
+        assert sub.status == Subscription.Status.ACTIVE

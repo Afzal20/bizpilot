@@ -7,6 +7,7 @@ from bizpilot.billing.api.views import CreateCustomerPortalView
 from bizpilot.billing.api.views import PlanListView
 from bizpilot.billing.api.views import StripeWebhookView
 from bizpilot.billing.api.views import SubscriptionDetailView
+from bizpilot.billing.api.views import SyncCheckoutSessionView
 
 app_name = "billing"
 
@@ -33,5 +34,10 @@ urlpatterns = [
         "orgs/<uuid:org_id>/billing/portal/",
         CreateCustomerPortalView.as_view(),
         name="billing-portal",
+    ),
+    path(
+        "orgs/<uuid:org_id>/billing/sync-checkout/",
+        SyncCheckoutSessionView.as_view(),
+        name="billing-sync-checkout",
     ),
 ]

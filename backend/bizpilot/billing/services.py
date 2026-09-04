@@ -38,21 +38,39 @@ def create_checkout_session(
     get_stripe_client()
     sub = get_or_create_free_subscription(organization)
 
+    target_price_id = price_id.strip() if price_id else ""
+    if not target_price_id or target_price_id.lower() == "pro":
+        target_price_id = getattr(settings, "STRIPE_PRO_PRICE_ID", "") or target_price_id
+
     price_mapping = PriceMapping.objects.filter(
-        stripe_price_id=price_id,
+        stripe_price_id=target_price_id,
         is_active=True,
     ).first()
+
+    if not price_mapping:
+        price_mapping = PriceMapping.objects.filter(
+            plan__code=target_price_id,
+            is_active=True,
+        ).first()
+        if price_mapping:
+            target_price_id = price_mapping.stripe_price_id
+
+    plan_code = (
+        price_mapping.plan.code
+        if price_mapping
+        else ("pro" if target_price_id == getattr(settings, "STRIPE_PRO_PRICE_ID", "") else "pro")
+    )
 
     session_kwargs: dict[str, Any] = {
         "payment_method_types": ["card"],
         "mode": "subscription",
-        "line_items": [{"price": price_id, "quantity": 1}],
+        "line_items": [{"price": target_price_id, "quantity": 1}],
         "success_url": success_url,
         "cancel_url": cancel_url,
         "client_reference_id": str(organization.id),
         "metadata": {
             "organization_id": str(organization.id),
-            "plan_code": price_mapping.plan.code if price_mapping else "",
+            "plan_code": plan_code,
         },
     }
 
@@ -62,7 +80,11 @@ def create_checkout_session(
         session_kwargs["customer_email"] = customer_email
 
     session = stripe.checkout.Session.create(**session_kwargs)
-    return {"session_id": session.id, "url": session.url or ""}
+    return {
+        "session_id": session.id,
+        "url": session.url or "",
+        "checkout_url": session.url or "",
+    }
 
 
 def create_customer_portal_session(
@@ -81,7 +103,29 @@ def create_customer_portal_session(
         customer=sub.stripe_customer_id,
         return_url=return_url,
     )
-    return {"url": session.url}
+    return {"url": session.url, "portal_url": session.url}
+
+
+def sync_checkout_session(
+    session_id: str,
+    organization: Organization | None = None,
+) -> Subscription | None:
+    """Retrieve a completed checkout session from Stripe and sync org subscription."""
+    get_stripe_client()
+    session = stripe.checkout.Session.retrieve(session_id)
+    session_data = session.to_dict() if hasattr(session, "to_dict") else dict(session)
+    _process_checkout_completed({"object": session_data})
+
+    if organization:
+        return Subscription.objects.filter(organization=organization).first()
+
+    org_id = session_data.get("client_reference_id") or session_data.get(
+        "metadata",
+        {},
+    ).get("organization_id")
+    if org_id:
+        return Subscription.objects.filter(organization_id=org_id).first()
+    return None
 
 
 def _process_checkout_completed(event_data: dict[str, Any]) -> None:
@@ -101,9 +145,12 @@ def _process_checkout_completed(event_data: dict[str, Any]) -> None:
 
     customer_id = session.get("customer")
     sub_id = session.get("subscription")
-    plan_code = session.get("metadata", {}).get("plan_code")
+    plan_code = session.get("metadata", {}).get("plan_code") or "pro"
 
     plan = Plan.objects.filter(code=plan_code).first()
+    if not plan:
+        plan = Plan.objects.filter(code="pro").first()
+
     sub = get_or_create_free_subscription(org)
 
     if customer_id:

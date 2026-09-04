@@ -10,8 +10,11 @@ from rest_framework import status
 from rest_framework.exceptions import APIException
 from rest_framework.exceptions import PermissionDenied
 
+from decimal import Decimal
+
 from bizpilot.billing.models import Plan
 from bizpilot.billing.models import PlanEntitlement
+from bizpilot.billing.models import PriceMapping
 from bizpilot.billing.models import Subscription
 from bizpilot.billing.models import UsageCounter
 
@@ -113,6 +116,20 @@ def seed_default_plans() -> None:
                 key=key,
                 defaults={"value": {"value": val}},
             )
+
+        if plan.code == "pro":
+            pro_price_id = getattr(settings, "STRIPE_PRO_PRICE_ID", "")
+            if pro_price_id:
+                PriceMapping.objects.update_or_create(
+                    stripe_price_id=pro_price_id,
+                    defaults={
+                        "plan": plan,
+                        "interval": PriceMapping.Interval.MONTH,
+                        "amount": Decimal("9.00"),
+                        "currency": "USD",
+                        "is_active": True,
+                    },
+                )
 
 
 def get_or_create_free_subscription(organization: Organization) -> Subscription:

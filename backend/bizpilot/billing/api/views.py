@@ -23,6 +23,7 @@ from bizpilot.billing.models import Plan
 from bizpilot.billing.services import create_checkout_session
 from bizpilot.billing.services import create_customer_portal_session
 from bizpilot.billing.services import process_stripe_event
+from bizpilot.billing.services import sync_checkout_session
 from bizpilot.orgs.models import Organization
 from bizpilot.orgs.permissions import IsOrgMember
 
@@ -62,14 +63,60 @@ class CreateCheckoutSessionView(APIView):
         serializer.is_valid(raise_exception=True)
 
         user_email = request.user.email if request.user else None
-        res = create_checkout_session(
-            organization=org,
-            price_id=serializer.validated_data["price_id"],
-            success_url=serializer.validated_data["success_url"],
-            cancel_url=serializer.validated_data["cancel_url"],
-            customer_email=user_email,
-        )
-        return Response(res, status=status.HTTP_200_OK)
+        try:
+            res = create_checkout_session(
+                organization=org,
+                price_id=serializer.validated_data["price_id"],
+                success_url=serializer.validated_data["success_url"],
+                cancel_url=serializer.validated_data["cancel_url"],
+                customer_email=user_email,
+            )
+            return Response(res, status=status.HTTP_200_OK)
+        except stripe.error.StripeError as err:
+            return Response(
+                {"detail": str(getattr(err, "user_message", None) or err)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as err:
+            return Response(
+                {"detail": str(err)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class SyncCheckoutSessionView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsOrgMember]
+
+    def post(self, request: Any, org_id: str) -> Response:
+        org = get_object_or_404(Organization, id=org_id, is_active=True)
+        session_id = request.data.get("session_id", "").strip()
+        if not session_id:
+            return Response(
+                {"detail": "session_id is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            sub = sync_checkout_session(session_id, organization=org)
+            if not sub:
+                return Response(
+                    {"detail": "Subscription could not be synced."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            return Response(
+                {"status": "synced", "plan": sub.plan.code},
+                status=status.HTTP_200_OK,
+            )
+        except stripe.error.StripeError as err:
+            return Response(
+                {"detail": str(getattr(err, "user_message", None) or err)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as err:
+            return Response(
+                {"detail": str(err)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class CreateCustomerPortalView(APIView):
