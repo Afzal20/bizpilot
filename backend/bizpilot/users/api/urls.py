@@ -5,6 +5,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.views import TokenVerifyView
 
 from .views import ClaimPendingInvitesView
+from .views import GoogleAuthView
 from .views import LoginView
 from .views import LogoutView
 from .views import MeView
@@ -18,6 +19,7 @@ app_name = "auth_api"
 auth_patterns = [
     path("signup/", SignupView.as_view(), name="signup"),
     path("login/", LoginView.as_view(), name="login"),
+    path("google/", GoogleAuthView.as_view(), name="google-auth"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("refresh/", TokenRefreshView.as_view(), name="token-refresh"),
     path("verify/", TokenVerifyView.as_view(), name="token-verify"),

@@ -1,6 +1,9 @@
 from typing import TYPE_CHECKING
 from typing import Any
 
+import requests
+from allauth.socialaccount.models import SocialAccount
+from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes
 from django.utils.encoding import force_str
@@ -19,6 +22,7 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from bizpilot.core.mixins import log_audit_event
+from bizpilot.orgs.services import create_organization
 from bizpilot.users.models import Profile
 from bizpilot.users.models import User
 
@@ -220,9 +224,11 @@ class PasswordResetRequestView(APIView):
                 target=user,
             )
             try:
-                from bizpilot.core.tasks import send_password_reset_email_task  # noqa: PLC0415
+                from bizpilot.core.tasks import (  # noqa: PLC0415
+                    send_password_reset_email_task,
+                )
                 send_password_reset_email_task.delay(user.pk, uid, token)
-            except Exception:
+            except Exception:  # noqa: BLE001, S110
                 pass
             # Response message stays generic to prevent user enumeration
             return Response(
@@ -303,3 +309,223 @@ class ClaimPendingInvitesView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+def _exchange_google_code(  # noqa: PLR0911
+    code: str, redirect_uri: str,
+) -> tuple[dict[str, Any] | None, Response | None]:
+    client_id = getattr(settings, "GOOGLE_CLIENT_ID", "")
+    client_secret = getattr(settings, "GOOGLE_CLIENT_SECRET", "")
+    if not client_id or not client_secret:
+        return None, Response(
+            {"error": _("Google OAuth credentials are not configured on the server.")},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    oauth_token_url = "https://oauth2.googleapis.com/token"  # noqa: S105
+    payload = {
+        "code": code,
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "redirect_uri": redirect_uri,
+        "grant_type": "authorization_code",
+    }
+    try:
+        token_resp = requests.post(oauth_token_url, data=payload, timeout=10)
+    except requests.RequestException as exc:
+        msg = _("Failed to connect to Google token endpoint: %s") % exc
+        return None, Response({"error": msg}, status=status.HTTP_502_BAD_GATEWAY)
+
+    if token_resp.status_code != status.HTTP_200_OK:
+        try:
+            err_json = token_resp.json()
+            err_msg = (
+                err_json.get("error_description")
+                or err_json.get("error")
+                or "Failed to exchange authorization code."
+            )
+        except Exception:  # noqa: BLE001
+            err_msg = "Failed to exchange authorization code with Google."
+        return None, Response({"error": _(err_msg)}, status=status.HTTP_400_BAD_REQUEST)
+
+    token_data = token_resp.json()
+    access_token = token_data.get("access_token")
+    if not access_token:
+        return None, Response(
+            {"error": _("Google did not return an access token.")},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        userinfo_resp = requests.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"},
+            timeout=10,
+        )
+    except requests.RequestException as exc:
+        msg = _("Failed to connect to Google userinfo endpoint: %s") % exc
+        return None, Response({"error": msg}, status=status.HTTP_502_BAD_GATEWAY)
+
+    if userinfo_resp.status_code != status.HTTP_200_OK:
+        return None, Response(
+            {"error": _("Failed to fetch user profile from Google.")},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    return userinfo_resp.json(), None
+
+
+def _verify_google_id_token(
+    id_token: str,
+) -> tuple[dict[str, Any] | None, Response | None]:
+    tokeninfo_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={id_token}"
+    try:
+        tokeninfo_resp = requests.get(tokeninfo_url, timeout=10)
+    except requests.RequestException as exc:
+        msg = _("Failed to verify ID token with Google: %s") % exc
+        return None, Response({"error": msg}, status=status.HTTP_502_BAD_GATEWAY)
+
+    if tokeninfo_resp.status_code != status.HTTP_200_OK:
+        return None, Response(
+            {"error": _("Invalid or expired Google ID token.")},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    user_info = tokeninfo_resp.json()
+    client_id = getattr(settings, "GOOGLE_CLIENT_ID", "")
+    if client_id and user_info.get("aud") != client_id:
+        return None, Response(
+            {"error": _("Token audience does not match this application.")},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    return user_info, None
+
+
+def _provision_google_user(
+    user_info: dict[str, Any],
+    request: Request,
+) -> tuple[User, bool]:
+    email = user_info["email"].strip().lower()
+    google_sub = str(user_info.get("sub", ""))
+    name = user_info.get("name", "").strip()
+    picture = user_info.get("picture", "").strip()
+
+    user = User.objects.filter(email=email).first()
+    is_new = False
+    if not user:
+        user = User.objects.create_user(
+            email=email,
+            name=name,
+            password=None,
+        )
+        user.set_unusable_password()
+        user.save()
+        is_new = True
+    elif name and not user.name:
+        user.name = name
+        user.save(update_fields=["name"])
+
+    SocialAccount.objects.update_or_create(
+        provider="google",
+        uid=google_sub or email,
+        defaults={
+            "user": user,
+            "extra_data": user_info,
+        },
+    )
+
+    profile, _created = Profile.objects.get_or_create(
+        user=user,
+        defaults={"full_name": name, "avatar_url": picture},
+    )
+    updated_fields = []
+    if picture and not profile.avatar_url:
+        profile.avatar_url = picture
+        updated_fields.append("avatar_url")
+    if name and not profile.full_name:
+        profile.full_name = name
+        updated_fields.append("full_name")
+    if updated_fields:
+        profile.save(update_fields=updated_fields)
+
+    has_active_org = (
+        hasattr(user, "memberships")
+        and user.memberships.filter(status="active").exists()
+    )
+    if not has_active_org:
+        try:
+            org_name = f"{name or 'My'} Organization"
+            create_organization(name=org_name, owner=user)
+        except Exception:  # noqa: BLE001, S110
+            pass
+
+    log_audit_event(
+        request=request,
+        action="auth.google_signup" if is_new else "auth.google_login",
+        target=user,
+        changes_diff={"provider": "google", "email": email},
+    )
+    return user, is_new
+
+
+class GoogleAuthView(APIView):
+    """Authenticate or register user via Google OAuth 2.0 or Google ID Token."""
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request: Request) -> Response:
+        """Return Google OAuth public configuration."""
+        client_id = getattr(settings, "GOOGLE_CLIENT_ID", "")
+        return Response({"client_id": client_id}, status=status.HTTP_200_OK)
+
+    def post(self, request: Request) -> Response:
+        """Verify Google OAuth authorization code or ID token, and return JWT tokens."""
+        data = request.data if isinstance(request.data, dict) else {}
+        code = data.get("code")
+        redirect_uri = data.get("redirect_uri", "")
+        id_token = data.get("id_token")
+
+        if not code and not id_token:
+            return Response(
+                {"error": _("Authorization code or ID token is required.")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if code:
+            user_info, err_resp = _exchange_google_code(code, redirect_uri)
+            if err_resp:
+                return err_resp
+        else:
+            assert id_token is not None
+            user_info, err_resp = _verify_google_id_token(id_token)
+            if err_resp:
+                return err_resp
+
+        if not user_info or not user_info.get("email"):
+            return Response(
+                {"error": _("No email address provided by Google account.")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        email_verified = user_info.get("email_verified")
+        if isinstance(email_verified, str):
+            email_verified = email_verified.lower() in ("true", "1")
+        elif email_verified is None:
+            email_verified = True
+
+        if not email_verified:
+            return Response(
+                {"error": _("Your Google account email is not verified.")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user, is_new = _provision_google_user(user_info, request)
+        tokens = get_tokens_for_user(user)
+        user_data = CurrentUserSerializer(user).data
+
+        return Response(
+            {"user": user_data, "tokens": tokens},
+            status=status.HTTP_201_CREATED if is_new else status.HTTP_200_OK,
+        )
+
+
