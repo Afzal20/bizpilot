@@ -1,0 +1,24 @@
+Invoice {{ invoice.invoice_number }} from {{ invoice.business_name|default:"BizPilot" }}
+
+Hello {{ invoice.client_name }},
+
+An invoice has been generated for you by {{ invoice.business_name|default:"our team" }}.
+
+Invoice Number: {{ invoice.invoice_number }}
+Issue Date: {{ invoice.issue_date }}
+Due Date: {{ invoice.due_date }}
+Amount Due: {{ invoice.balance_due }} {{ invoice.currency }}
+Total: {{ invoice.total }} {{ invoice.currency }}
+
+Items:
+{% for item in invoice.items.all %}
+- {{ item.description }}: {{ item.quantity }} x {{ item.rate }} = {{ item.amount }} {{ invoice.currency }}
+{% endfor %}
+
+{% if invoice.notes %}
+Notes: {{ invoice.notes }}
+{% endif %}
+
+A PDF copy of this invoice is attached to this email.
+
+BizPilot ERP Team

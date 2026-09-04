@@ -1,0 +1,48 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}You've been invited to join {{ invite.organization.name }} on BizPilot{% endblock %}
+
+{% block content %}
+  <div style="text-align: center; margin-bottom: 24px;">
+    <span class="badge badge-info">Team Invitation</span>
+    <h2 style="margin-top: 12px; margin-bottom: 4px; color: #ffffff;">Join {{ invite.organization.name }}</h2>
+    <p style="color: #94a3b8; margin-top: 0;">
+      {{ invite.invited_by.name|default:invite.invited_by.email }} has invited you to join their organization on BizPilot.
+    </p>
+  </div>
+
+  <div style="background-color: #0f172a; border-radius: 8px; padding: 20px; margin: 24px 0; border: 1px solid #1e293b;">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+      <span style="color: #94a3b8;">Organization:</span>
+      <strong style="color: #ffffff;">{{ invite.organization.name }}</strong>
+    </div>
+    {% if invite.department %}
+    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+      <span style="color: #94a3b8;">Department:</span>
+      <span style="color: #ffffff;">{{ invite.department }}</span>
+    </div>
+    {% endif %}
+    <div style="display: flex; justify-content: space-between;">
+      <span style="color: #94a3b8;">Assigned Roles:</span>
+      <span style="color: #818cf8;">
+        {% for role in invite.roles.all %}
+          {{ role.name }}{% if not forloop.last %}, {% endif %}
+        {% empty %}
+          Member
+        {% endfor %}
+      </span>
+    </div>
+  </div>
+
+  <div style="text-align: center; margin: 32px 0;">
+    <a href="{{ invite_url }}" class="btn">Accept Invitation</a>
+    <p style="font-size: 13px; color: #64748b; margin-top: 12px;">
+      Or copy and paste this link in your browser:<br>
+      <a href="{{ invite_url }}" style="color: #818cf8; word-break: break-all;">{{ invite_url }}</a>
+    </p>
+  </div>
+
+  <p style="font-size: 13px; color: #64748b;">
+    This invitation link will expire in 7 days. If you did not expect this invitation, you can ignore this email.
+  </p>
+{% endblock %}

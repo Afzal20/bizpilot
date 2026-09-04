@@ -41,6 +41,22 @@ DATABASES = {
     "default": env.db("DATABASE_URL", default="sqlite:///:memory:"),
 }
 
+# CACHES
+# ------------------------------------------------------------------------------
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "",
+    }
+}
+
+# CELERY
+# ------------------------------------------------------------------------------
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True
+CELERY_BROKER_URL = "memory://"
+CELERY_RESULT_BACKEND = "cache+memory://"
+
 # Your stuff...
 # ------------------------------------------------------------------------------
 

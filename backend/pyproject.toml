@@ -41,6 +41,7 @@ dependencies = [
   "sentry-sdk==2.68.1",
   "stripe>=11.0.0",
   "requests>=2.31.0",
+  "reportlab>=5.0.0",
 ]
 
 [dependency-groups]

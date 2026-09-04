@@ -300,6 +300,11 @@ class InviteViewSet(OrgScopedViewSet):
             raise ValidationError(msg) from exc
 
         output_serializer = InviteSerializer(invite)
+        try:
+            from bizpilot.core.tasks import send_invite_email_task  # noqa: PLC0415
+            send_invite_email_task.delay(str(invite.id))
+        except Exception:
+            pass
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)
 
 

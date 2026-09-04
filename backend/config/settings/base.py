@@ -244,6 +244,12 @@ EMAIL_BACKEND = env(
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-timeout
 EMAIL_TIMEOUT = 5
+DEFAULT_FROM_EMAIL = env(
+    "DJANGO_DEFAULT_FROM_EMAIL",
+    default="BizPilot <notifications@bizpilot.local>",
+)
+SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
+FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
 
 # ADMIN
 # ------------------------------------------------------------------------------

@@ -158,7 +158,28 @@ class InvoiceViewSet(OrgScopedViewSet):
     ) -> Response:
         invoice = self.get_object()
         updated = send_invoice(invoice, actor=request.user)
+        try:
+            from bizpilot.core.tasks import send_invoice_email_task  # noqa: PLC0415
+            send_invoice_email_task.delay(str(updated.id))
+        except Exception:
+            pass
         return Response(self.get_serializer(updated).data)
+
+    @action(detail=True, methods=["get"], url_path="pdf")
+    def pdf(
+        self,
+        request: Any,
+        *args: Any,
+        **kwargs: Any,
+    ) -> Any:
+        from django.http import HttpResponse  # noqa: PLC0415
+        from bizpilot.erp.pdf import generate_invoice_pdf  # noqa: PLC0415
+
+        invoice = self.get_object()
+        pdf_bytes = generate_invoice_pdf(invoice)
+        response = HttpResponse(pdf_bytes, content_type="application/pdf")
+        response["Content-Disposition"] = f'inline; filename="{invoice.invoice_number}.pdf"'
+        return response
 
     @action(detail=True, methods=["post"])
     def cancel(
@@ -200,6 +221,11 @@ class InvoiceViewSet(OrgScopedViewSet):
             serializer.validated_data["amount"],
             details=details,
         )
+        try:
+            from bizpilot.core.tasks import send_payment_receipt_email_task  # noqa: PLC0415
+            send_payment_receipt_email_task.delay(str(payment.id))
+        except Exception:
+            pass
         return Response(
             PaymentCreateSerializer(payment).data,
             status=status.HTTP_201_CREATED,
@@ -235,6 +261,11 @@ class PaymentViewSet(OrgScopedViewSet):
             details=details,
         )
         serializer.instance = payment
+        try:
+            from bizpilot.core.tasks import send_payment_receipt_email_task  # noqa: PLC0415
+            send_payment_receipt_email_task.delay(str(payment.id))
+        except Exception:
+            pass
 
 
 class ExpenseViewSet(OrgScopedViewSet):

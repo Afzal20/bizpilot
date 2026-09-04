@@ -1,0 +1,42 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}Payment Receipt for Invoice {{ payment.invoice.invoice_number }}{% endblock %}
+
+{% block content %}
+  <div style="text-align: center; margin-bottom: 24px;">
+    <span class="badge badge-success">Payment Received</span>
+    <h2 style="margin-top: 12px; margin-bottom: 4px; color: #ffffff;">Thank You for Your Payment</h2>
+    <p style="color: #94a3b8; margin-top: 0;">We have successfully recorded your payment.</p>
+  </div>
+
+  <div style="background-color: #0f172a; border-radius: 8px; padding: 20px; margin: 24px 0; border: 1px solid #1e293b;">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+      <span style="color: #94a3b8;">Amount Paid:</span>
+      <strong style="color: #34d399; font-size: 18px;">{{ payment.amount }} {{ payment.currency }}</strong>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+      <span style="color: #94a3b8;">Invoice Number:</span>
+      <span style="color: #ffffff;">{{ payment.invoice.invoice_number }}</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+      <span style="color: #94a3b8;">Payment Date:</span>
+      <span style="color: #ffffff;">{{ payment.payment_date }}</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+      <span style="color: #94a3b8;">Payment Method:</span>
+      <span style="color: #ffffff;">{{ payment.get_payment_method_display }}</span>
+    </div>
+    {% if payment.reference %}
+    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+      <span style="color: #94a3b8;">Reference / Transaction ID:</span>
+      <span style="color: #ffffff;">{{ payment.reference }}</span>
+    </div>
+    {% endif %}
+    <div style="display: flex; justify-content: space-between; border-top: 1px solid #334155; padding-top: 12px; margin-top: 12px;">
+      <span style="color: #cbd5e1; font-weight: 600;">Remaining Balance:</span>
+      <span style="font-size: 16px; font-weight: 700; color: #ffffff;">{{ payment.invoice.balance_due }} {{ payment.currency }}</span>
+    </div>
+  </div>
+
+  <p>If you have any questions regarding this receipt, please reply directly to this email.</p>
+{% endblock %}

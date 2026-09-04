@@ -219,6 +219,11 @@ class PasswordResetRequestView(APIView):
                 action="auth.password_reset_requested",
                 target=user,
             )
+            try:
+                from bizpilot.core.tasks import send_password_reset_email_task  # noqa: PLC0415
+                send_password_reset_email_task.delay(user.pk, uid, token)
+            except Exception:
+                pass
             # Response message stays generic to prevent user enumeration
             return Response(
                 {

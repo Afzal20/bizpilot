@@ -1,0 +1,16 @@
+Payment Receipt for Invoice {{ payment.invoice.invoice_number }}
+
+Thank You for Your Payment!
+
+We have successfully recorded your payment.
+
+Amount Paid: {{ payment.amount }} {{ payment.currency }}
+Invoice: {{ payment.invoice.invoice_number }}
+Date: {{ payment.payment_date }}
+Method: {{ payment.get_payment_method_display }}
+{% if payment.reference %}
+Reference: {{ payment.reference }}
+{% endif %}
+Remaining Balance: {{ payment.invoice.balance_due }} {{ payment.currency }}
+
+BizPilot ERP Team

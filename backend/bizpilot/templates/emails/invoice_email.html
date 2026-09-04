@@ -1,0 +1,65 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}Invoice {{ invoice.invoice_number }} from {{ invoice.business_name|default:"BizPilot" }}{% endblock %}
+
+{% block content %}
+  <h2 style="margin-top: 0; color: #ffffff;">New Invoice Available</h2>
+  <p>Hello {{ invoice.client_name }},</p>
+  <p>
+    An invoice has been generated for you by <strong>{{ invoice.business_name|default:"our team" }}</strong>.
+  </p>
+
+  <div style="background-color: #0f172a; border-radius: 8px; padding: 20px; margin: 24px 0; border: 1px solid #1e293b;">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+      <span style="color: #94a3b8;">Invoice Number:</span>
+      <strong style="color: #ffffff;">{{ invoice.invoice_number }}</strong>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+      <span style="color: #94a3b8;">Issue Date:</span>
+      <span style="color: #ffffff;">{{ invoice.issue_date }}</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+      <span style="color: #94a3b8;">Due Date:</span>
+      <span style="color: #f87171;">{{ invoice.due_date }}</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; border-top: 1px solid #334155; padding-top: 12px; margin-top: 12px;">
+      <span style="color: #cbd5e1; font-weight: 600;">Amount Due:</span>
+      <span style="font-size: 20px; font-weight: 800; color: #38bdf8;">{{ invoice.balance_due }} {{ invoice.currency }}</span>
+    </div>
+  </div>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th style="text-align: right;">Qty</th>
+        <th style="text-align: right;">Rate</th>
+        <th style="text-align: right;">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in invoice.items.all %}
+      <tr>
+        <td>{{ item.description }}</td>
+        <td style="text-align: right;">{{ item.quantity }}</td>
+        <td style="text-align: right;">{{ item.rate }}</td>
+        <td style="text-align: right;">{{ item.amount }}</td>
+      </tr>
+      {% endfor %}
+      <tr class="total-row">
+        <td colspan="3" style="text-align: right;">Total Due:</td>
+        <td style="text-align: right;">{{ invoice.total }} {{ invoice.currency }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  {% if invoice.notes %}
+  <div style="margin-top: 20px; font-size: 13px; color: #94a3b8; border-left: 3px solid #6366f1; padding-left: 12px;">
+    <strong>Notes:</strong> {{ invoice.notes }}
+  </div>
+  {% endif %}
+
+  <div style="text-align: center; margin-top: 30px;">
+    <p style="margin-bottom: 8px;">A PDF copy of this invoice is attached to this email.</p>
+  </div>
+{% endblock %}

@@ -1,0 +1,17 @@
+You've been invited to join {{ invite.organization.name }} on BizPilot
+
+Hello,
+
+{{ invite.invited_by.name|default:invite.invited_by.email }} has invited you to join {{ invite.organization.name }} on BizPilot ERP.
+
+Organization: {{ invite.organization.name }}
+{% if invite.department %}
+Department: {{ invite.department }}
+{% endif %}
+
+Accept the invitation by opening this link:
+{{ invite_url }}
+
+This invitation will expire in 7 days.
+
+BizPilot ERP Team
