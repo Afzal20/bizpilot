@@ -34,5 +34,13 @@ TEMPLATES[0]["OPTIONS"]["debug"] = True  # type: ignore[index]
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#media-url
 MEDIA_URL = "http://media.testserver/"
+
+# DATABASE
+# ------------------------------------------------------------------------------
+DATABASES = {
+    "default": env.db("DATABASE_URL", default="sqlite:///:memory:"),
+}
+
 # Your stuff...
 # ------------------------------------------------------------------------------
+
