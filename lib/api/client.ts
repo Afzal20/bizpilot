@@ -347,7 +347,7 @@ export const erpApi = {
   },
 
   async recordPayment(orgId: string, invoiceId: string, data: { amount: number; payment_method: string; reference?: string; notes?: string }): Promise<void> {
-    await apiClient<void>(`/orgs/${orgId}/invoices/${invoiceId}/record-payment/`, {
+    await apiClient<void>(`/orgs/${orgId}/invoices/${invoiceId}/payments/`, {
       method: "POST",
       body: JSON.stringify(data),
     });
