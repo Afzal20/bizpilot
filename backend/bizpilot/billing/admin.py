@@ -10,6 +10,12 @@ from bizpilot.billing.models import Subscription
 from bizpilot.billing.models import UsageCounter
 
 
+class PriceMappingInline(admin.TabularInline):
+    model = PriceMapping
+    extra = 1
+    fields = ["interval", "amount", "currency", "stripe_price_id", "is_active"]
+
+
 class PlanEntitlementInline(admin.TabularInline):
     model = PlanEntitlement
     extra = 0
@@ -20,7 +26,7 @@ class PlanAdmin(admin.ModelAdmin):
     list_display = ["name", "code", "tier", "trial_days", "is_active"]
     list_filter = ["is_active", "tier"]
     search_fields = ["name", "code"]
-    inlines = [PlanEntitlementInline]
+    inlines = [PriceMappingInline, PlanEntitlementInline]
 
 
 @admin.register(Subscription)
@@ -40,13 +46,16 @@ class SubscriptionAdmin(admin.ModelAdmin):
 class PriceMappingAdmin(admin.ModelAdmin):
     list_display = [
         "plan",
-        "stripe_price_id",
         "interval",
         "amount",
         "currency",
+        "stripe_price_id",
         "is_active",
+        "updated_at",
     ]
-    list_filter = ["interval", "currency", "is_active"]
+    list_editable = ["amount", "interval", "stripe_price_id", "is_active"]
+    list_filter = ["interval", "currency", "is_active", "plan"]
+    search_fields = ["plan__name", "stripe_price_id"]
 
 
 @admin.register(UsageCounter)

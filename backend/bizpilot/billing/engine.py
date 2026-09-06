@@ -143,6 +143,30 @@ def seed_default_plans() -> None:
                     },
                 )
 
+        if plan.code == "enterprise":
+            ent_price_id = getattr(settings, "STRIPE_ENTERPRISE_PRICE_ID", "") or "price_enterprise_month"
+            PriceMapping.objects.get_or_create(
+                stripe_price_id=ent_price_id,
+                defaults={
+                    "plan": plan,
+                    "interval": PriceMapping.Interval.MONTH,
+                    "amount": Decimal("49.00"),
+                    "currency": "USD",
+                    "is_active": True,
+                },
+            )
+            ent_yearly_id = getattr(settings, "STRIPE_ENTERPRISE_YEARLY_PRICE_ID", "") or "price_enterprise_year"
+            PriceMapping.objects.get_or_create(
+                stripe_price_id=ent_yearly_id,
+                defaults={
+                    "plan": plan,
+                    "interval": PriceMapping.Interval.YEAR,
+                    "amount": Decimal("490.00"),
+                    "currency": "USD",
+                    "is_active": True,
+                },
+            )
+
 
 def get_or_create_free_subscription(organization: Organization) -> Subscription:
     """Ensure an organization has a subscription, defaulting to Free."""
