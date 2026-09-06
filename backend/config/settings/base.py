@@ -454,7 +454,7 @@ STRIPE_WEBHOOK_SECRET = env.str(
     "STRIPE_WEBHOOK_SECRET",
     default="whsec_placeholder",
 )
-BILLING_ENFORCEMENT = env.bool("BILLING_ENFORCEMENT", default=False)
+BILLING_ENFORCEMENT = env.bool("BILLING_ENFORCEMENT", default=True)
 OPENROUTER_API_KEY = env.str("OPENROUTER_API_KEY", default="")
 OPENROUTER_BASE_URL = env.str(
     "OPENROUTER_BASE_URL",
