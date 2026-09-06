@@ -36,7 +36,7 @@ async function DashboardGuard({ children }: DashboardLayoutProps) {
   }
 
   if (!user) {
-    redirect("/auth/login");
+    redirect("/auth/login?expired=true");
   }
 
   // Accept any team invites pending for this email

@@ -8,6 +8,8 @@ import type {
   InvoiceWithItems,
   Organization,
   Product,
+  PlanDetail,
+  PriceMapping,
   Profile,
   ReportData,
   Subscription,
@@ -478,6 +480,10 @@ export const erpApi = {
 // ==================== BILLING API ====================
 
 export const billingApi = {
+  async getPlans(): Promise<{ count: number; results: PlanDetail[] }> {
+    return apiClient<{ count: number; results: PlanDetail[] }>("/billing/plans/");
+  },
+
   async getSubscription(orgId: string): Promise<Subscription> {
     return apiClient<Subscription>(`/orgs/${orgId}/subscription/`);
   },

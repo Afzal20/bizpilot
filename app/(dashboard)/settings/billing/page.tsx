@@ -7,6 +7,7 @@ import { PricingCardSection } from "@/components/pricing/pricing-card-section";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { CheckCircle2, AlertCircle, Sparkles, Check } from "lucide-react";
+import type { PlanDetail } from "@/lib/api/types";
 
 interface BillingPageProps {
   searchParams: Promise<{
@@ -34,12 +35,25 @@ export default async function BillingSettingsPage({ searchParams }: BillingPageP
     subscription = null;
   }
 
+  let plans: PlanDetail[] = [];
+  try {
+    const plansRes = await billingApi.getPlans();
+    plans = plansRes?.results || [];
+  } catch {
+    plans = [];
+  }
+
   const planCode =
     typeof subscription?.plan === "object"
       ? (subscription.plan as { code?: string })?.code
       : subscription?.plan;
   const isPro = planCode === "pro" && subscription?.status === "active";
   const proPriceId = process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || "pro";
+
+  // Find admin-configured Pro price if available
+  const proPlan = plans.find((p) => p.code === "pro");
+  const proMonthly = proPlan?.prices?.find((p) => p.interval === "month" && p.is_active);
+  const displayPrice = proMonthly ? `$${parseFloat(proMonthly.amount).toFixed(2)}` : "$9.00";
 
   return (
     <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
@@ -84,7 +98,7 @@ export default async function BillingSettingsPage({ searchParams }: BillingPageP
                 </Badge>
               </div>
               <p className="text-xs sm:text-sm text-muted-foreground mt-1.5">
-                {isPro ? "$9.00 / month recurring" : "Free forever with core invoicing features"}
+                {isPro ? `${displayPrice} / month recurring` : "Free forever with core invoicing features"}
               </p>
             </div>
             {isPro && (
@@ -167,7 +181,7 @@ export default async function BillingSettingsPage({ searchParams }: BillingPageP
               <UpgradeButton
                 priceId={proPriceId}
                 showIcon
-                label="Upgrade to Pro ($9/mo)"
+                label={`Upgrade to Pro (${displayPrice}/mo)`}
                 className="bg-primary text-primary-foreground font-semibold px-6 py-3 rounded-full hover:bg-primary/90 shadow-sm transition-all"
               />
             )}
@@ -175,13 +189,14 @@ export default async function BillingSettingsPage({ searchParams }: BillingPageP
         </div>
       </div>
 
-      {/* Pricing Cards Section with Responsive 3-Card Design & Interactive Plan Selection */}
+      {/* Pricing Cards Section with Dynamic Admin Prices & Interactive Selection */}
       <div className="pt-2">
         <PricingCardSection
           inDashboard={true}
           currentPlan={isPro ? "pro" : "free"}
           isSubscribed={Boolean(isPro)}
           activeInterval="month"
+          initialPlans={plans}
         />
       </div>
     </div>

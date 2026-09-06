@@ -48,6 +48,27 @@ export interface ReportData {
   };
 }
 
+export interface PriceMapping {
+  id: string;
+  stripe_price_id: string;
+  interval: "month" | "year";
+  amount: string;
+  currency: string;
+  is_active: boolean;
+}
+
+export interface PlanDetail {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  tier: number;
+  trial_days: number;
+  is_active: boolean;
+  entitlements: { id: string; key: string; value: { value: unknown } }[];
+  prices: PriceMapping[];
+}
+
 export interface Subscription {
   id: string;
   organization_id: string;
