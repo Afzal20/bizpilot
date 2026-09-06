@@ -12,6 +12,7 @@ const dashboardRoutes = [
   "/settings",
   "/help",
   "/search",
+  "/view",
 ]
 
 export function ConditionalNavbar() {
