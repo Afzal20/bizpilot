@@ -25,12 +25,16 @@ const titles: { match: string; title: string }[] = [
 
 interface SiteHeaderProps {
   isPro?: boolean
+  planCode?: string
 }
 
-export function SiteHeader({ isPro = false }: SiteHeaderProps) {
+export function SiteHeader({ isPro = false, planCode }: SiteHeaderProps) {
   const pathname = usePathname()
   const title =
     titles.find((t) => pathname?.startsWith(t.match))?.title ?? "Dashboard"
+
+  const isEnterprise = planCode === "enterprise"
+  const isPaid = isPro || isEnterprise
 
   return (
     <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
@@ -43,13 +47,13 @@ export function SiteHeader({ isPro = false }: SiteHeaderProps) {
         <h1 className="text-base font-medium">{title}</h1>
 
         <div className="ml-auto flex items-center gap-2.5">
-          {isPro ? (
+          {isPaid ? (
             <Link
               href="/settings/billing"
               className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
             >
               <CheckCircle2 className="h-3.5 w-3.5" />
-              <span>Pro Plan</span>
+              <span>{isEnterprise ? "Enterprise Plan" : "Pro Plan"}</span>
             </Link>
           ) : (
             <Link

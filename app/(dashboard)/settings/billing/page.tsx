@@ -47,13 +47,27 @@ export default async function BillingSettingsPage({ searchParams }: BillingPageP
     typeof subscription?.plan === "object"
       ? (subscription.plan as { code?: string })?.code
       : subscription?.plan;
+  const isEnterprise = planCode === "enterprise" && subscription?.status === "active";
   const isPro = planCode === "pro" && subscription?.status === "active";
+  const isPaid = (isPro || isEnterprise) && subscription?.status === "active";
   const proPriceId = process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || "pro";
 
-  // Find admin-configured Pro price if available
+  // Find admin-configured Pro and Enterprise price if available
   const proPlan = plans.find((p) => p.code === "pro");
   const proMonthly = proPlan?.prices?.find((p) => p.interval === "month" && p.is_active);
   const displayPrice = proMonthly ? `$${parseFloat(proMonthly.amount).toFixed(2)}` : "$9.00";
+
+  const entPlan = plans.find((p) => p.code === "enterprise");
+  const entMonthly = entPlan?.prices?.find((p) => p.interval === "month" && p.is_active);
+  const entDisplayPrice = entMonthly ? `$${parseFloat(entMonthly.amount).toFixed(2)}` : "$49.00";
+
+  const currentPlanName = isEnterprise ? "BizPilot Enterprise" : isPro ? "BizPilot Pro" : "BizPilot Starter";
+  const currentBadgeText = isEnterprise ? "Enterprise Plan" : isPro ? "Active" : "Free Plan";
+  const currentPriceText = isEnterprise
+    ? `${entDisplayPrice} / month recurring`
+    : isPro
+    ? `${displayPrice} / month recurring`
+    : "Free forever with core invoicing features";
 
   return (
     <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
@@ -69,7 +83,9 @@ export default async function BillingSettingsPage({ searchParams }: BillingPageP
           <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
           <div>
             <p className="font-semibold text-sm sm:text-base">Upgrade Successful</p>
-            <p className="text-xs sm:text-sm">Thank you for subscribing! Your Pro subscription is now fully active.</p>
+            <p className="text-xs sm:text-sm">
+              Thank you for subscribing! Your {isEnterprise ? "Enterprise" : "Pro"} subscription is now fully active.
+            </p>
           </div>
         </div>
       )}
@@ -91,26 +107,26 @@ export default async function BillingSettingsPage({ searchParams }: BillingPageP
             <div>
               <div className="flex flex-wrap items-center gap-2.5">
                 <h3 className="text-xl sm:text-2xl font-bold tracking-tight">
-                  {isPro ? "BizPilot Pro" : "BizPilot Starter"}
+                  {currentPlanName}
                 </h3>
-                <Badge variant={isPro ? "default" : "secondary"} className="text-xs px-2.5 py-0.5 font-semibold">
-                  {isPro ? "Active" : "Free Plan"}
+                <Badge variant={isPaid ? "default" : "secondary"} className="text-xs px-2.5 py-0.5 font-semibold">
+                  {currentBadgeText}
                 </Badge>
               </div>
               <p className="text-xs sm:text-sm text-muted-foreground mt-1.5">
-                {isPro ? `${displayPrice} / month recurring` : "Free forever with core invoicing features"}
+                {currentPriceText}
               </p>
             </div>
-            {isPro && (
+            {isPaid && (
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/80 px-3.5 py-1.5 rounded-full w-fit font-medium border border-border/50">
                 <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
-                All Pro features unlocked
+                {isEnterprise ? "All Enterprise features & unlimited scale unlocked" : "All Pro features unlocked"}
               </div>
             )}
           </div>
 
           <div className="text-sm">
-            {isPro && subscription ? (
+            {isPaid && subscription ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-muted/40 p-4 sm:p-5 rounded-2xl border border-border/50">
                   <div>
@@ -175,7 +191,7 @@ export default async function BillingSettingsPage({ searchParams }: BillingPageP
           </div>
 
           <div className="pt-4 border-t border-border/70 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            {isPro ? (
+            {isPaid ? (
               <BillingPortalButton />
             ) : (
               <UpgradeButton
@@ -193,8 +209,8 @@ export default async function BillingSettingsPage({ searchParams }: BillingPageP
       <div className="pt-2">
         <PricingCardSection
           inDashboard={true}
-          currentPlan={isPro ? "pro" : "free"}
-          isSubscribed={Boolean(isPro)}
+          currentPlan={isEnterprise ? "enterprise" : isPro ? "pro" : "free"}
+          isSubscribed={isPaid}
           activeInterval="month"
           initialPlans={plans}
         />

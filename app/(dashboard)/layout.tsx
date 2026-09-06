@@ -51,6 +51,8 @@ async function DashboardGuard({ children }: DashboardLayoutProps) {
     memberships.find((m) => m.org.id === activeOrgId) ?? memberships[0];
 
   let isPro = false;
+  let isEnterprise = false;
+  let activePlanCode = "free";
   if (activeOrg?.org?.id) {
     try {
       const sub = await billingApi.getSubscription(activeOrg.org.id);
@@ -58,9 +60,12 @@ async function DashboardGuard({ children }: DashboardLayoutProps) {
         typeof sub?.plan === "object"
           ? (sub.plan as { code?: string })?.code
           : sub?.plan;
-      isPro = planCode === "pro" && sub?.status === "active";
+      activePlanCode = planCode || "free";
+      isEnterprise = planCode === "enterprise" && sub?.status === "active";
+      isPro = (planCode === "pro" || isEnterprise) && sub?.status === "active";
     } catch {
       isPro = false;
+      isEnterprise = false;
     }
   }
 
@@ -87,7 +92,7 @@ async function DashboardGuard({ children }: DashboardLayoutProps) {
         isPro={isPro}
       />
       <SidebarInset>
-        <SiteHeader isPro={isPro} />
+        <SiteHeader isPro={isPro} planCode={activePlanCode} />
         <main className="flex-1">{children}</main>
         <Toaster />
       </SidebarInset>
