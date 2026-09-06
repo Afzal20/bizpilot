@@ -12,8 +12,11 @@ import { ComponentProps } from "react";
 
 const menuItems = [
   { title: "Home", href: "/" },
-  { title: "Contact", href: "/contact" },
+  { title: "Features", href: "/features" },
   { title: "Pricing", href: "/pricing" },
+  { title: "About", href: "/about" },
+  { title: "FAQ", href: "/faq" },
+  { title: "Contact", href: "/contact" },
 ];
 
 export const NavMenu = (props: ComponentProps<typeof NavigationMenu>) => (

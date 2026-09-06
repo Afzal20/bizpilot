@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Mail, MessageSquare, Phone, Clock } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Footer } from "@/components/footer";
 
 export default function ContactsPage() {
     const [formData, setFormData] = useState({
@@ -236,6 +237,7 @@ export default function ContactsPage() {
                     </div>
                 </div>
             </section>
+            <Footer />
         </main>
     );
 }

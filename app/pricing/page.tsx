@@ -3,6 +3,7 @@ import { PricingComparison } from "@/components/pricing/pricing-comparison";
 import { PricingFAQ } from "@/components/pricing/pricing-faq";
 import { Card, CardContent } from "@/components/ui/card";
 import { Check, Shield, Zap } from "lucide-react";
+import { Footer } from "@/components/footer";
 
 export default function PricingPage() {
     return (
@@ -90,6 +91,7 @@ export default function PricingPage() {
                     </div>
                 </div>
             </section>
+            <Footer />
         </main>
     );
 }
