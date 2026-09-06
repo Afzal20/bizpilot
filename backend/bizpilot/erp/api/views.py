@@ -56,7 +56,9 @@ class ClientViewSet(OrgScopedViewSet):
     }
 
     def get_serializer_class(self) -> type[Any]:
-        if self.request.query_params.get("with_stats") == "true":
+        if self.request.query_params.get("with_stats") == "true" or (
+            self.action == "list" and self.request.query_params.get("with_stats") != "false"
+        ):
             return ClientWithStatsSerializer
         return ClientSerializer
 
