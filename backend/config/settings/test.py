@@ -62,4 +62,6 @@ CELERY_RESULT_BACKEND = "cache+memory://"
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+BILLING_ENFORCEMENT = False
+
 

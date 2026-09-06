@@ -10,6 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from bizpilot.billing.engine import allow
 from bizpilot.billing.engine import enforce
 from bizpilot.erp.api.serializers import AdjustStockSerializer
 from bizpilot.erp.api.serializers import ClientSerializer
@@ -160,6 +161,7 @@ class InvoiceViewSet(OrgScopedViewSet):
         **kwargs: Any,
     ) -> Response:
         invoice = self.get_object()
+        allow(invoice.organization, "email_invoice_delivery")
         updated = send_invoice(invoice, actor=request.user)
         try:
             from bizpilot.core.tasks import send_invoice_email_task  # noqa: PLC0415

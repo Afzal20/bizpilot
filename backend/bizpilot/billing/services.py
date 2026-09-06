@@ -7,6 +7,7 @@ from typing import Any
 
 import stripe
 from django.conf import settings
+from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
 
@@ -175,6 +176,7 @@ def _process_checkout_completed(event_data: dict[str, Any]) -> None:
         sub.plan = plan
     sub.status = Subscription.Status.ACTIVE
     sub.save()
+    cache.clear()
 
 
 def _process_subscription_updated(event_data: dict[str, Any]) -> None:
@@ -216,6 +218,7 @@ def _process_subscription_updated(event_data: dict[str, Any]) -> None:
         )
 
     sub.save()
+    cache.clear()
 
 
 def _process_subscription_deleted(event_data: dict[str, Any]) -> None:
@@ -235,6 +238,7 @@ def _process_subscription_deleted(event_data: dict[str, Any]) -> None:
     sub.stripe_subscription_id = ""
     sub.cancel_at_period_end = False
     sub.save()
+    cache.clear()
 
 
 def process_stripe_event(event_dict: dict[str, Any]) -> StripeEvent:
