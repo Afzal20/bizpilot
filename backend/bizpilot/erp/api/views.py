@@ -134,6 +134,7 @@ class InvoiceViewSet(OrgScopedViewSet):
         "send": "invoices.send",
         "cancel": "invoices.cancel",
         "add_payment": "invoices.record_payment",
+        "record_payment": "invoices.record_payment",
     }
 
     def perform_create(self, serializer: Any) -> None:
@@ -232,6 +233,15 @@ class InvoiceViewSet(OrgScopedViewSet):
             PaymentCreateSerializer(payment).data,
             status=status.HTTP_201_CREATED,
         )
+
+    @action(detail=True, methods=["post"], url_path="record-payment")
+    def record_payment(
+        self,
+        request: Any,
+        *args: Any,
+        **kwargs: Any,
+    ) -> Response:
+        return self.add_payment(request, *args, **kwargs)
 
 
 class PaymentViewSet(OrgScopedViewSet):
