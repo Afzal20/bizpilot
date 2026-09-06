@@ -222,3 +222,37 @@ class ERPAPITest(APITestCase):
         assert "products" in search_res.data
         assert "invoices" in search_res.data
         assert "expenses" in search_res.data
+
+    def test_public_invoice_endpoints(self) -> None:
+        self.client.force_authenticate(user=None)
+        client = Client.objects.create(
+            organization=self.org,
+            name="Public Corp",
+            email="public@corp.com",
+        )
+        invoice = Invoice.objects.create(
+            organization=self.org,
+            client=client,
+            invoice_number="INV-2026-9999",
+            status=Invoice.Status.PENDING,
+            issue_date="2026-09-01",
+            due_date="2026-09-15",
+            currency="USD",
+            subtotal=Decimal("150.00"),
+            total=Decimal("150.00"),
+            client_name="Public Corp",
+            client_email="public@corp.com",
+        )
+
+        detail_url = f"/api/v1/public/invoices/{invoice.id}/"
+        res = self.client.get(detail_url)
+        assert res.status_code == status.HTTP_200_OK
+        assert res.data["invoice_number"] == "INV-2026-9999"
+        assert res.data["client_name"] == "Public Corp"
+
+        pdf_url = f"/api/v1/public/invoices/{invoice.id}/pdf/"
+        pdf_res = self.client.get(pdf_url)
+        assert pdf_res.status_code == status.HTTP_200_OK
+        assert pdf_res["Content-Type"] == "application/pdf"
+        assert len(pdf_res.content) > 0
+

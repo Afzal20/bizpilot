@@ -4,6 +4,8 @@ from django.urls import include
 from django.urls import path
 from rest_framework.routers import SimpleRouter
 
+from bizpilot.erp.api.public_views import PublicInvoiceDetailAPIView
+from bizpilot.erp.api.public_views import PublicInvoicePdfAPIView
 from bizpilot.erp.api.views import ClientViewSet
 from bizpilot.erp.api.views import DashboardStatsAPIView
 from bizpilot.erp.api.views import ExpenseViewSet
@@ -50,5 +52,15 @@ urlpatterns = [
         "orgs/<uuid:org_id>/search/",
         GlobalSearchAPIView.as_view(),
         name="search",
+    ),
+    path(
+        "public/invoices/<uuid:pk>/",
+        PublicInvoiceDetailAPIView.as_view(),
+        name="public-invoice-detail",
+    ),
+    path(
+        "public/invoices/<uuid:pk>/pdf/",
+        PublicInvoicePdfAPIView.as_view(),
+        name="public-invoice-pdf",
     ),
 ]
