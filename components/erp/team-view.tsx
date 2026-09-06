@@ -68,10 +68,15 @@ const roleColors: Record<string, string> = {
   viewer: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
 };
 
-const ROLE_ORDER: TeamRole[] = ["owner", "admin", "editor", "viewer"];
+const ROLE_WEIGHT: Record<TeamRole, number> = {
+  owner: 4,
+  admin: 3,
+  editor: 2,
+  viewer: 1,
+};
 
 function rank(role: TeamRole) {
-  return ROLE_ORDER.indexOf(role);
+  return ROLE_WEIGHT[role] ?? 0;
 }
 
 export function TeamView({
