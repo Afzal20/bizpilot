@@ -3,6 +3,7 @@
 import { requireOrg } from "@/lib/erp/org";
 import { billingApi } from "@/lib/api/client";
 import { headers } from "next/headers";
+import { revalidatePath } from "next/cache";
 
 async function getFrontendBaseUrl(): Promise<string> {
   const envBase = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_FRONTEND_URL;
@@ -107,6 +108,9 @@ export async function syncCheckoutSession(sessionId: string) {
   try {
     const { org } = await requireOrg();
     await billingApi.syncCheckoutSession(org.id, sessionId);
+    revalidatePath("/settings/billing");
+    revalidatePath("/dashboard");
+    revalidatePath("/", "layout");
     return { success: true };
   } catch (err) {
     console.error("Billing sync checkout error:", err);
