@@ -353,6 +353,16 @@ export const erpApi = {
     });
   },
 
+  async sendInvoice(orgId: string, id: string): Promise<InvoiceWithItems> {
+    return apiClient<InvoiceWithItems>(`/orgs/${orgId}/invoices/${id}/send/`, {
+      method: "POST",
+    });
+  },
+
+  async getPublicInvoice(id: string): Promise<InvoiceWithItems> {
+    return apiClient<InvoiceWithItems>(`/public/invoices/${id}/`, {}, null);
+  },
+
   // --- Clients ---
   async listClients(orgId: string): Promise<ClientWithStats[]> {
     const res = await apiClient<{ results?: ClientWithStats[] } | ClientWithStats[]>(`/orgs/${orgId}/clients/?with_stats=true`);

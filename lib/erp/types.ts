@@ -110,6 +110,7 @@ export interface Invoice {
 export interface InvoiceWithItems extends Invoice {
   items: InvoiceItem[];
   paid_amount: number;
+  balance_due?: number;
   payments: Payment[];
 }
 

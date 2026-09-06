@@ -5,10 +5,15 @@ import Link from "next/link"
 import {
   IconCheck,
   IconDots,
+  IconDownload,
+  IconExternalLink,
   IconPlus,
   IconSearch,
+  IconSend,
+  IconShare,
   IconTrash,
 } from "@tabler/icons-react"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -29,6 +34,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -44,7 +50,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Invoice } from "@/lib/erp/types"
 import { formatCurrency, formatDate } from "@/lib/erp/format"
-import { deleteInvoice, markInvoicePaid } from "@/app/(dashboard)/actions"
+import { deleteInvoice, markInvoicePaid, sendInvoiceAction } from "@/app/(dashboard)/actions"
+import { exportToCSV } from "@/lib/erp/export-csv"
 
 const statusStyles: Record<string, string> = {
   paid: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
@@ -89,6 +96,46 @@ export function InvoicesTable({ invoices, canCreate = true }: { invoices: Invoic
     } finally {
       setPendingId(null)
     }
+  }
+
+  async function handleSendEmail(id: string, email?: string) {
+    setPendingId(id)
+    try {
+      const res = await sendInvoiceAction(id)
+      if (res.ok) {
+        toast.success(`Invoice sent to ${email || "client"}.`)
+      } else {
+        toast.error(res.error || "Failed to send invoice.")
+      }
+    } catch {
+      toast.error("Failed to send invoice.")
+    } finally {
+      setPendingId(null)
+    }
+  }
+
+  async function handleCopyLink(id: string) {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/view/${id}`)
+      toast.success("Public invoice link copied.")
+    } catch {
+      toast.error("Failed to copy link.")
+    }
+  }
+
+  function handleExportCSV() {
+    const headers = ["Invoice Number", "Client", "Amount", "Currency", "Status", "Issue Date", "Due Date"]
+    const rows = invoices.map((inv) => [
+      inv.invoice_number,
+      inv.client_name || "",
+      inv.total,
+      inv.currency,
+      inv.status,
+      inv.issue_date,
+      inv.due_date,
+    ])
+    exportToCSV(`invoices-${new Date().toISOString().slice(0, 10)}.csv`, headers, rows)
+    toast.success("Invoices exported to CSV.")
   }
 
   return (
@@ -142,6 +189,10 @@ export function InvoicesTable({ invoices, canCreate = true }: { invoices: Invoic
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
+              <Button variant="outline" size="sm" onClick={handleExportCSV}>
+                <IconDownload className="size-4" />
+                Export CSV
+              </Button>
               {canCreate && (
                 <Button asChild size="sm">
                   <Link href="/create-invoice">
@@ -235,6 +286,19 @@ export function InvoicesTable({ invoices, canCreate = true }: { invoices: Invoic
                                         View Details
                                       </Link>
                                     </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleCopyLink(invoice.id)}>
+                                      <IconShare className="size-4" />
+                                      Copy Public Link
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => window.open(`/view/${invoice.id}`, '_blank')}>
+                                      <IconExternalLink className="size-4" />
+                                      View Public Page
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleSendEmail(invoice.id, invoice.client_email)}>
+                                      <IconSend className="size-4" />
+                                      Send via Email
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
                                     {invoice.status !== "paid" && (
                                       <DropdownMenuItem
                                         onClick={() => handleMarkPaid(invoice.id)}

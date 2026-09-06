@@ -3,11 +3,13 @@
 import * as React from "react"
 import {
   IconDots,
+  IconDownload,
   IconMinus,
   IconPlus,
   IconSearch,
   IconTrash,
 } from "@tabler/icons-react"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -54,6 +56,7 @@ import {
   toggleProductActive,
   updateProductStock,
 } from "@/app/(dashboard)/actions"
+import { exportToCSV } from "@/lib/erp/export-csv"
 
 export function InventoryTable({ products }: { products: Product[] }) {
   const [search, setSearch] = React.useState("")
@@ -91,6 +94,23 @@ export function InventoryTable({ products }: { products: Product[] }) {
     } finally {
       setPendingId(null)
     }
+  }
+
+  function handleExportCSV() {
+    const headers = ["Product Name", "SKU", "Category", "Unit Price", "Currency", "Stock Quantity", "Low Stock Threshold", "Track Stock", "Status"]
+    const rows = products.map((p) => [
+      p.name,
+      p.sku || "",
+      p.category || "",
+      p.unit_price,
+      p.currency,
+      p.stock_quantity,
+      p.low_stock_threshold,
+      p.track_stock ? "Yes" : "No",
+      p.is_active ? "Active" : "Archived",
+    ])
+    exportToCSV(`inventory-${new Date().toISOString().slice(0, 10)}.csv`, headers, rows)
+    toast.success("Inventory exported to CSV.")
   }
 
   return (
@@ -142,6 +162,10 @@ export function InventoryTable({ products }: { products: Product[] }) {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
+              <Button variant="outline" size="sm" onClick={handleExportCSV}>
+                <IconDownload className="size-4" />
+                Export CSV
+              </Button>
               <Button asChild size="sm">
                 <a href="/create-product">
                   <IconPlus className="size-4" />

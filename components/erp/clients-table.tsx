@@ -4,12 +4,14 @@ import * as React from "react"
 import Link from "next/link"
 import {
   IconDots,
+  IconDownload,
   IconMail,
   IconPhone,
   IconPlus,
   IconSearch,
   IconTrash,
 } from "@tabler/icons-react"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -56,6 +58,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { ClientWithStats } from "@/lib/erp/types"
 import { formatCurrency, getInitials } from "@/lib/erp/format"
 import { deleteClient } from "@/app/(dashboard)/actions"
+import { exportToCSV } from "@/lib/erp/export-csv"
 
 export function ClientsTable({ clients }: { clients: ClientWithStats[] }) {
   const [search, setSearch] = React.useState("")
@@ -80,6 +83,22 @@ export function ClientsTable({ clients }: { clients: ClientWithStats[] }) {
     } finally {
       setPendingId(null)
     }
+  }
+
+  function handleExportCSV() {
+    const headers = ["Name", "Email", "Company", "Phone", "Invoices Count", "Total Invoiced", "Outstanding", "Status"]
+    const rows = clients.map((c) => [
+      c.name,
+      c.email,
+      c.company || "",
+      c.phone || "",
+      c.invoice_count,
+      c.total_invoiced,
+      c.outstanding,
+      c.status,
+    ])
+    exportToCSV(`clients-${new Date().toISOString().slice(0, 10)}.csv`, headers, rows)
+    toast.success("Clients exported to CSV.")
   }
 
   return (
@@ -134,6 +153,10 @@ export function ClientsTable({ clients }: { clients: ClientWithStats[] }) {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
+              <Button variant="outline" size="sm" onClick={handleExportCSV}>
+                <IconDownload className="size-4" />
+                Export CSV
+              </Button>
               <Button asChild size="sm">
                 <Link href="/create-client">
                   <IconPlus className="size-4" />
@@ -186,9 +209,12 @@ export function ClientsTable({ clients }: { clients: ClientWithStats[] }) {
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="min-w-0">
-                                  <span className="block truncate font-medium">
+                                  <Link
+                                    href={`/clients/${client.id}`}
+                                    className="block truncate font-medium hover:underline"
+                                  >
                                     {client.name}
-                                  </span>
+                                  </Link>
                                   {client.company && (
                                     <span className="block truncate text-xs text-muted-foreground">
                                       {client.company}
@@ -242,6 +268,11 @@ export function ClientsTable({ clients }: { clients: ClientWithStats[] }) {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
+                                  <DropdownMenuItem asChild>
+                                    <Link href={`/clients/${client.id}`}>
+                                      View Client Details
+                                    </Link>
+                                  </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => setEditClient(client)}>
                                     Edit Client
                                   </DropdownMenuItem>

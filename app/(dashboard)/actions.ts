@@ -179,6 +179,22 @@ export async function markInvoicePaid(invoiceId: string) {
   revalidatePath("/reports");
 }
 
+export async function sendInvoiceAction(invoiceId: string): Promise<ActionResult> {
+  try {
+    const ctx = await requireRole("editor");
+    await erpApi.sendInvoice(ctx.org.id, invoiceId);
+    revalidatePath("/invoices");
+    revalidatePath(`/invoices/${invoiceId}`);
+    revalidatePath("/dashboard");
+    return { ok: true, id: invoiceId };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to send invoice.",
+    };
+  }
+}
+
 export async function updateInvoiceStatus(invoiceId: string, status: InvoiceStatus) {
   const ctx = await requireRole("editor");
   await erpApi.updateInvoice(ctx.org.id, invoiceId, { status });

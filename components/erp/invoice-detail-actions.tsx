@@ -6,6 +6,9 @@ import {
   IconArrowLeft,
   IconCheck,
   IconCoin,
+  IconExternalLink,
+  IconSend,
+  IconShare,
   IconTrash,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
@@ -55,6 +58,7 @@ import {
   deleteInvoice,
   markInvoicePaid,
   recordPayment,
+  sendInvoiceAction,
   updateInvoiceStatus,
 } from "@/app/(dashboard)/actions";
 import { DownloadInvoicePDF } from "@/components/invoice/DownloadInvoicePDF";
@@ -120,9 +124,48 @@ export function InvoiceDetailActions({ invoice }: { invoice: InvoiceWithItems })
     });
   }
 
+  async function handleCopyLink() {
+    try {
+      const publicUrl = `${window.location.origin}/view/${invoice.id}`;
+      await navigator.clipboard.writeText(publicUrl);
+      toast.success("Public invoice link copied to clipboard.");
+    } catch {
+      toast.error("Failed to copy link.");
+    }
+  }
+
+  async function handleSendEmail() {
+    run(async () => {
+      const res = await sendInvoiceAction(invoice.id);
+      if (!res.ok) throw new Error(res.error || "Failed to send invoice");
+    }, `Invoice sent to ${invoice.client_email || "client"}.`);
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-2">
       <DownloadInvoicePDF data={toPdfData(invoice)} label="PDF" />
+
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={busy}
+        onClick={handleCopyLink}
+        title="Copy customer-facing invoice link"
+      >
+        <IconShare className="size-4" />
+        Share Link
+      </Button>
+
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={busy}
+        onClick={handleSendEmail}
+        title="Send invoice via email to client"
+      >
+        <IconSend className="size-4" />
+        Send via Email
+      </Button>
 
       {invoice.status !== "paid" && balance > 0 && (
         <Dialog open={payOpen} onOpenChange={setPayOpen}>
@@ -160,6 +203,10 @@ export function InvoiceDetailActions({ invoice }: { invoice: InvoiceWithItems })
             </Badge>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => window.open(`/view/${invoice.id}`, '_blank')}>
+            <IconExternalLink className="size-4" />
+            Open Public Preview
+          </DropdownMenuItem>
           {invoice.status !== "paid" && (
             <DropdownMenuItem
               onClick={() => run(() => markInvoicePaid(invoice.id), "Marked as paid.")}

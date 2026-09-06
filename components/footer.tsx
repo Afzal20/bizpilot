@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 
@@ -92,7 +94,7 @@ export function Footer() {
         </div>
 
         <div className="pt-8 border-t flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} BizPilot Inc. All rights reserved.</p>
+          <p>&copy; 2026 BizPilot Inc. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <Link href="/privacy" className="hover:underline">Privacy</Link>
             <Link href="/terms" className="hover:underline">Terms</Link>

@@ -3,10 +3,12 @@
 import * as React from "react"
 import {
   IconDots,
+  IconDownload,
   IconPlus,
   IconSearch,
   IconTrash,
 } from "@tabler/icons-react"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -58,6 +60,7 @@ import type { Expense } from "@/lib/erp/types"
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS } from "@/lib/erp/types"
 import { formatCurrency, formatDate } from "@/lib/erp/format"
 import { createExpense, deleteExpense } from "@/app/(dashboard)/actions"
+import { exportToCSV } from "@/lib/erp/export-csv"
 
 export function ExpensesView({ expenses }: { expenses: Expense[] }) {
   const [search, setSearch] = React.useState("")
@@ -89,6 +92,22 @@ export function ExpensesView({ expenses }: { expenses: Expense[] }) {
     } finally {
       setPendingId(null)
     }
+  }
+
+  function handleExportCSV() {
+    const headers = ["Title", "Category", "Vendor", "Amount", "Currency", "Date", "Payment Method", "Notes"]
+    const rows = expenses.map((e) => [
+      e.title,
+      e.category,
+      e.vendor || "",
+      e.amount,
+      e.currency,
+      e.expense_date,
+      e.payment_method,
+      e.notes || "",
+    ])
+    exportToCSV(`expenses-${new Date().toISOString().slice(0, 10)}.csv`, headers, rows)
+    toast.success("Expenses exported to CSV.")
   }
 
   return (
@@ -147,13 +166,18 @@ export function ExpensesView({ expenses }: { expenses: Expense[] }) {
             </Select>
           </div>
 
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <IconPlus className="size-4" />
-                Add Expense
-              </Button>
-            </DialogTrigger>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportCSV}>
+              <IconDownload className="size-4" />
+              Export CSV
+            </Button>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm">
+                  <IconPlus className="size-4" />
+                  Add Expense
+                </Button>
+              </DialogTrigger>
             <DialogContent className="sm:max-w-lg">
               <form
                 action={async (fd) => {
@@ -256,6 +280,7 @@ export function ExpensesView({ expenses }: { expenses: Expense[] }) {
             </DialogContent>
           </Dialog>
         </div>
+      </div>
 
         <Card className="mt-4">
           <CardContent className="p-0 overflow-x-auto">

@@ -3,6 +3,7 @@ import "server-only";
 import { authApi, erpApi, orgsApi } from "@/lib/api/client";
 import { getActiveOrg } from "./org";
 import type {
+  Client,
   ClientWithStats,
   DashboardStats,
   Expense,
@@ -57,6 +58,16 @@ export async function getClientsWithStats(orgId: string): Promise<ClientWithStat
     return await erpApi.listClients(orgId);
   } catch {
     return [];
+  }
+}
+
+export async function getClient(clientId: string): Promise<Client | null> {
+  try {
+    const ctx = await getActiveOrg();
+    if (!ctx) return null;
+    return await erpApi.getClient(ctx.org.id, clientId);
+  } catch {
+    return null;
   }
 }
 
