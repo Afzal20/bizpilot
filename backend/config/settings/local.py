@@ -63,6 +63,7 @@ INSTALLED_APPS += ["django_extensions"]
 # Celery
 # ------------------------------------------------------------------------------
 
+CELERY_TASK_ALWAYS_EAGER = True
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#task-eager-propagates
 CELERY_TASK_EAGER_PROPAGATES = True
 # Your stuff...
