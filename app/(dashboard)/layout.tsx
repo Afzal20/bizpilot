@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { authApi } from "@/lib/api/client";
+import { authApi, billingApi } from "@/lib/api/client";
 import {
   claimPendingInvites,
   getMemberships,
@@ -50,6 +50,20 @@ async function DashboardGuard({ children }: DashboardLayoutProps) {
   const activeOrg =
     memberships.find((m) => m.org.id === activeOrgId) ?? memberships[0];
 
+  let isPro = false;
+  if (activeOrg?.org?.id) {
+    try {
+      const sub = await billingApi.getSubscription(activeOrg.org.id);
+      const planCode =
+        typeof sub?.plan === "object"
+          ? (sub.plan as { code?: string })?.code
+          : sub?.plan;
+      isPro = planCode === "pro" && sub?.status === "active";
+    } catch {
+      isPro = false;
+    }
+  }
+
   const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
 
   return (
@@ -70,9 +84,10 @@ async function DashboardGuard({ children }: DashboardLayoutProps) {
           role: m.member.role,
         }))}
         activeOrgId={activeOrg?.org.id}
+        isPro={isPro}
       />
       <SidebarInset>
-        <SiteHeader />
+        <SiteHeader isPro={isPro} />
         <main className="flex-1">{children}</main>
         <Toaster />
       </SidebarInset>

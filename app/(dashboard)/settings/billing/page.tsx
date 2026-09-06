@@ -34,7 +34,11 @@ export default async function BillingSettingsPage({ searchParams }: BillingPageP
     subscription = null;
   }
 
-  const isPro = subscription && subscription.plan === "pro" && subscription.status === "active";
+  const planCode =
+    typeof subscription?.plan === "object"
+      ? (subscription.plan as { code?: string })?.code
+      : subscription?.plan;
+  const isPro = planCode === "pro" && subscription?.status === "active";
   const proPriceId = process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || "pro";
 
   return (
@@ -147,7 +151,14 @@ export default async function BillingSettingsPage({ searchParams }: BillingPageP
           <div className="pt-4 border-t flex flex-wrap gap-4 items-center">
             {isPro ? (
               <BillingPortalButton />
-            ) : null}
+            ) : (
+              <UpgradeButton
+                priceId={proPriceId}
+                showIcon
+                label="Upgrade to Pro ($9/mo)"
+                className="bg-primary text-primary-foreground font-semibold px-5 py-2.5 rounded-lg hover:bg-primary/90 shadow-sm"
+              />
+            )}
           </div>
         </div>
       </div>

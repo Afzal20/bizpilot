@@ -2,6 +2,8 @@
 
 import { usePathname } from "next/navigation"
 
+import Link from "next/link"
+import { CheckCircle2, Sparkles } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
@@ -21,7 +23,11 @@ const titles: { match: string; title: string }[] = [
   { match: "/help", title: "Help" },
 ]
 
-export function SiteHeader() {
+interface SiteHeaderProps {
+  isPro?: boolean
+}
+
+export function SiteHeader({ isPro = false }: SiteHeaderProps) {
   const pathname = usePathname()
   const title =
     titles.find((t) => pathname?.startsWith(t.match))?.title ?? "Dashboard"
@@ -35,7 +41,29 @@ export function SiteHeader() {
           className="mx-2 data-[orientation=vertical]:h-4"
         />
         <h1 className="text-base font-medium">{title}</h1>
+
+        <div className="ml-auto flex items-center gap-2.5">
+          {isPro ? (
+            <Link
+              href="/settings/billing"
+              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              <span>Pro Plan</span>
+            </Link>
+          ) : (
+            <Link
+              href="/settings/billing"
+              id="header-upgrade-btn"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs transition-all active:scale-95"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Upgrade to Pro</span>
+            </Link>
+          )}
+        </div>
       </div>
     </header>
   )
 }
+
