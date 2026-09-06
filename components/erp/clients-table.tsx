@@ -69,8 +69,8 @@ export function ClientsTable({ clients }: { clients: ClientWithStats[] }) {
       c.email.toLowerCase().includes(search.toLowerCase())
   )
 
-  const totalRevenue = clients.reduce((s, c) => s + c.total_invoiced, 0)
-  const totalOutstanding = clients.reduce((s, c) => s + c.outstanding, 0)
+  const totalRevenue = clients.reduce((s, c) => s + (Number(c.total_invoiced) || 0), 0)
+  const totalOutstanding = clients.reduce((s, c) => s + (Number(c.outstanding) || 0), 0)
   const activeClients = clients.filter((c) => c.status === "active").length
 
   async function handleDelete(id: string) {

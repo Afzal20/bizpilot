@@ -1,9 +1,10 @@
-export function formatCurrency(amount: number, currency = "USD") {
+export function formatCurrency(amount: number | string | undefined | null, currency = "USD") {
+  const num = typeof amount === "number" ? amount : Number(amount) || 0;
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
     maximumFractionDigits: 2,
-  }).format(amount)
+  }).format(num);
 }
 
 export function formatDate(dateStr: string) {

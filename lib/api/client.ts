@@ -355,7 +355,7 @@ export const erpApi = {
 
   // --- Clients ---
   async listClients(orgId: string): Promise<ClientWithStats[]> {
-    const res = await apiClient<{ results?: ClientWithStats[] } | ClientWithStats[]>(`/orgs/${orgId}/clients/`);
+    const res = await apiClient<{ results?: ClientWithStats[] } | ClientWithStats[]>(`/orgs/${orgId}/clients/?with_stats=true`);
     if (Array.isArray(res)) return res;
     return res.results ?? [];
   },
