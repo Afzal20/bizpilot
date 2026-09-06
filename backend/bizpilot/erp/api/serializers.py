@@ -134,6 +134,7 @@ class InvoicePaymentSerializer(serializers.ModelSerializer):
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
+    organization_id = serializers.UUIDField(read_only=True)
     items = InvoiceItemSerializer(many=True, required=False)
     payments = InvoicePaymentSerializer(many=True, read_only=True)
     paid_amount = serializers.DecimalField(
@@ -151,6 +152,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
         model = Invoice
         fields = [
             "id",
+            "organization_id",
             "client",
             "invoice_number",
             "status",
@@ -182,6 +184,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
+            "organization_id",
             "paid_amount",
             "balance_due",
             "stock_deducted",
