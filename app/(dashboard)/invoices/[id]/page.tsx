@@ -56,7 +56,7 @@ async function InvoiceDetailLoader({
   const { org } = await requireOrg();
   const invoice = await getInvoice(id);
   // Org isolation: a valid id from another organization must 404
-  if (!invoice || invoice.organization_id !== org.id) notFound();
+  if (!invoice || (invoice.organization_id && invoice.organization_id !== org.id)) notFound();
 
   const balance = Math.max(
     0,

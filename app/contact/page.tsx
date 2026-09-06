@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, MessageSquare, Phone, Clock } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function ContactsPage() {
     const [formData, setFormData] = useState({
@@ -18,8 +19,13 @@ export default function ContactsPage() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Handle form submission
-        console.log(formData);
+        toast.success("Thank you! Your message has been sent successfully.");
+        setFormData({
+            name: "",
+            email: "",
+            subject: "",
+            message: "",
+        });
     };
 
     return (
@@ -128,7 +134,7 @@ export default function ContactsPage() {
                                     </div>
                                     <div>
                                         <h3 className="font-semibold mb-1">Email me</h3>
-                                        <p className="text-sm text-gray-600">afzalhossen2019@.com</p>
+                                        <p className="text-sm text-gray-600">afzalhossen2019@gmail.com</p>
                                     </div>
                                 </div>
 
@@ -150,8 +156,8 @@ export default function ContactsPage() {
                                     <div>
                                         <h3 className="font-semibold mb-1">Business Hours</h3>
                                         <p className="text-sm text-gray-600">
-                                            Sunday-Wednesday , 9am-6pm EST<br />
-                                            Thurstday: 11am - 2pm<br />
+                                            Sunday-Wednesday, 9am-6pm EST<br />
+                                            Thursday: 11am - 2pm<br />
                                             Friday: Closed
                                         </p>
                                     </div>
