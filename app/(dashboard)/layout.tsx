@@ -64,7 +64,7 @@ async function DashboardGuard({ children }: DashboardLayoutProps) {
     }
   }
 
-  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
+  const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
 
   return (
     <SidebarProvider
