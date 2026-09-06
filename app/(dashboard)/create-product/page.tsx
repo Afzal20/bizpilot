@@ -1,4 +1,9 @@
+"use client"
+
+import * as React from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -16,6 +21,28 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { createProductAction } from "@/app/(dashboard)/actions"
 
 export default function CreateProductPage() {
+  const router = useRouter()
+  const [busy, setBusy] = React.useState(false)
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setBusy(true)
+    try {
+      const formData = new FormData(e.currentTarget)
+      const res = await createProductAction(formData)
+      if (res.ok) {
+        toast.success("Product created successfully.")
+        router.push("/products")
+      } else {
+        toast.error(res.error || "Failed to create product.")
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create product.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
@@ -33,7 +60,7 @@ export default function CreateProductPage() {
               </Button>
             </div>
 
-            <form action={createProductAction}>
+            <form onSubmit={handleSubmit}>
               <Card>
                 <CardHeader>
                   <CardTitle>Product Details</CardTitle>
@@ -118,10 +145,12 @@ export default function CreateProductPage() {
                   </div>
                 </CardContent>
                 <CardFooter className="justify-end gap-2">
-                  <Button asChild variant="ghost">
+                  <Button asChild variant="ghost" disabled={busy}>
                     <Link href="/products">Cancel</Link>
                   </Button>
-                  <Button type="submit">Save Product</Button>
+                  <Button type="submit" disabled={busy}>
+                    {busy ? "Saving..." : "Save Product"}
+                  </Button>
                 </CardFooter>
               </Card>
             </form>

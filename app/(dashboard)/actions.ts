@@ -315,23 +315,30 @@ export async function recordPayment(formData: FormData): Promise<ActionResult> {
 
 // ===================== CLIENTS =====================
 
-export async function createClientAction(formData: FormData) {
-  const ctx = await requireRole("editor");
-  const name = str(formData, "name");
-  const email = str(formData, "email");
-  if (!name || !email) return;
+export async function createClientAction(formData: FormData): Promise<ActionResult> {
+  try {
+    const ctx = await requireRole("editor");
+    const name = str(formData, "name");
+    const email = str(formData, "email");
+    if (!name || !email) return { ok: false, error: "Name and email are required." };
 
-  await erpApi.createClient(ctx.org.id, {
-    name,
-    email,
-    phone: str(formData, "phone"),
-    address: str(formData, "address"),
-    company: str(formData, "company"),
-  });
+    const client = await erpApi.createClient(ctx.org.id, {
+      name,
+      email,
+      phone: str(formData, "phone"),
+      address: str(formData, "address"),
+      company: str(formData, "company"),
+    });
 
-  revalidatePath("/clients");
-  revalidatePath("/dashboard");
-  redirect("/clients");
+    revalidatePath("/clients");
+    revalidatePath("/dashboard");
+    return { ok: true, id: client.id };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to create client.",
+    };
+  }
 }
 
 export async function deleteClient(clientId: string) {
@@ -369,27 +376,34 @@ export async function updateClient(formData: FormData): Promise<ActionResult> {
 
 // ===================== PRODUCTS / INVENTORY =====================
 
-export async function createProductAction(formData: FormData) {
-  const ctx = await requireRole("editor");
-  const name = str(formData, "name");
-  if (!name) return;
+export async function createProductAction(formData: FormData): Promise<ActionResult> {
+  try {
+    const ctx = await requireRole("editor");
+    const name = str(formData, "name");
+    if (!name) return { ok: false, error: "Product name is required." };
 
-  await erpApi.createProduct(ctx.org.id, {
-    name,
-    description: str(formData, "description"),
-    unit_price: num(formData, "unit_price"),
-    currency: str(formData, "currency", "USD"),
-    category: str(formData, "category"),
-    unit: str(formData, "unit", "item"),
-    sku: str(formData, "sku"),
-    stock_quantity: Math.trunc(num(formData, "stock_quantity")),
-    low_stock_threshold: Math.trunc(num(formData, "low_stock_threshold", 5)),
-    track_stock: formData.get("track_stock") === "on",
-  });
+    const product = await erpApi.createProduct(ctx.org.id, {
+      name,
+      description: str(formData, "description"),
+      unit_price: num(formData, "unit_price"),
+      currency: str(formData, "currency", "USD"),
+      category: str(formData, "category"),
+      unit: str(formData, "unit", "item"),
+      sku: str(formData, "sku"),
+      stock_quantity: Math.trunc(num(formData, "stock_quantity")),
+      low_stock_threshold: Math.trunc(num(formData, "low_stock_threshold", 5)),
+      track_stock: formData.get("track_stock") === "on",
+    });
 
-  revalidatePath("/products");
-  revalidatePath("/dashboard");
-  redirect("/products");
+    revalidatePath("/products");
+    revalidatePath("/dashboard");
+    return { ok: true, id: product.id };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to create product.",
+    };
+  }
 }
 
 export async function updateProductStock(productId: string, quantity: number) {
