@@ -75,7 +75,7 @@ export default function SearchPage() {
           id: member.id,
           type: "team",
           title: member.name,
-          subtitle: `${member.role} · ${member.email}`,
+          subtitle: `${member.role || "Member"} · ${member.email}`,
           route: "/team",
         }))
 
