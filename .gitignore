@@ -31,6 +31,11 @@ media/
 # Node (tooling only)
 node_modules/
 
+# Test artifacts and demo media
+*.png
+*.webm
+*.mp4
+
 # Docs build
 docs/_build/
 backend/docs/_build/
