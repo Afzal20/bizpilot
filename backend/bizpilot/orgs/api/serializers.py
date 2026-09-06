@@ -93,6 +93,7 @@ class MembershipSerializer(serializers.ModelSerializer[Membership]):
 
     roles = RoleSerializer(many=True, read_only=True)
     role_names = serializers.SerializerMethodField()
+    role = serializers.SerializerMethodField()
 
     class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
         model = Membership
@@ -105,6 +106,7 @@ class MembershipSerializer(serializers.ModelSerializer[Membership]):
             "department",
             "roles",
             "role_names",
+            "role",
             "status",
             "invited_at",
             "joined_at",
@@ -116,6 +118,7 @@ class MembershipSerializer(serializers.ModelSerializer[Membership]):
             "organization",
             "user",
             "email",
+            "role",
             "status",
             "invited_at",
             "joined_at",
@@ -125,6 +128,13 @@ class MembershipSerializer(serializers.ModelSerializer[Membership]):
 
     def get_role_names(self, obj: Membership) -> list[str]:
         return list(obj.roles.values_list("name", flat=True))
+
+    def get_role(self, obj: Membership) -> str:
+        names = [n.lower() for n in obj.roles.values_list("name", flat=True)]
+        for r in ("owner", "admin", "editor", "viewer"):
+            if r in names:
+                return r
+        return names[0] if names else "viewer"
 
 
 class MembershipUpdateRolesSerializer(serializers.Serializer):
