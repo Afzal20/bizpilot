@@ -36,6 +36,12 @@ node_modules/
 *.webm
 *.mp4
 
+# Curated documentation screenshots are versioned alongside the README.
+!docs/assets/
+!docs/assets/screenshots/
+!docs/assets/screenshots/billing/
+!docs/assets/screenshots/billing/*.png
+
 # Docs build
 docs/_build/
 backend/docs/_build/

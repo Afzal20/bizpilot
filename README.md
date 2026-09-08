@@ -3,11 +3,28 @@
 Monorepo for BizPilot: a subscription mini-ERP for small businesses
 (invoicing, clients, inventory, expenses, reports, teams).
 
+## Billing and plan controls
+
+BizPilot enforces plan limits in the product, guides users to the appropriate
+upgrade path, and uses Stripe Checkout for subscriptions.
+
+| Free-plan usage limit | Upgrade checkout |
+|---|---|
+| ![Client limit reached on the Free plan](docs/assets/screenshots/billing/free-plan-client-limit.png) | ![Stripe Checkout for a BizPilot subscription](docs/assets/screenshots/billing/stripe-checkout.png) |
+
+| Active Pro subscription | Active Enterprise subscription |
+|---|---|
+| ![Active Pro plan billing page](docs/assets/screenshots/billing/pro-plan-active-billing.png) | ![Active Enterprise plan billing page](docs/assets/screenshots/billing/enterprise-active-billing.png) |
+
+Additional plan-limit, feature-lock, checkout, and upgrade-flow captures are
+kept in [`docs/assets/screenshots/billing/`](docs/assets/screenshots/billing/).
+
 ## Layout
 
 | Path | Purpose |
 |---|---|
 | `docs/` | Product & engineering documentation (SaaS readiness report, QA requirements analysis, Django migration plan) |
+| `docs/assets/screenshots/billing/` | Product screenshots for billing, checkout, plan limits, and entitlement flows |
 | `backend/` | Django 5/6 + DRF API server (scaffolded with cookiecutter-django) |
 | `cookiecutter-config.yaml` | Reproducible cookiecutter-django scaffold configuration |
 
