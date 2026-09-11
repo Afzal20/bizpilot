@@ -1,10 +1,12 @@
 from typing import TYPE_CHECKING
 from typing import Any
+import urllib.parse
 
 import requests
 from allauth.socialaccount.models import SocialAccount
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
+from django.http import HttpResponseRedirect
 from django.utils.encoding import force_bytes
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
@@ -474,9 +476,30 @@ class GoogleAuthView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request: Request) -> Response:
-        """Return Google OAuth public configuration."""
+        """Return Google OAuth public configuration and authorization URL."""
         client_id = getattr(settings, "GOOGLE_CLIENT_ID", "")
-        return Response({"client_id": client_id}, status=status.HTTP_200_OK)
+        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:3000").rstrip("/")
+        redirect_uri = request.query_params.get("redirect_uri") or f"{frontend_url}/auth/callback"
+        next_url = request.query_params.get("next", "/dashboard")
+
+        params = {
+            "client_id": client_id,
+            "redirect_uri": redirect_uri,
+            "response_type": "code",
+            "scope": "openid email profile",
+            "access_type": "offline",
+            "prompt": "select_account",
+            "state": next_url,
+        }
+        auth_url = (
+            f"https://accounts.google.com/o/oauth2/v2/auth?{urllib.parse.urlencode(params)}"
+            if client_id
+            else ""
+        )
+        return Response(
+            {"client_id": client_id, "authorization_url": auth_url},
+            status=status.HTTP_200_OK,
+        )
 
     def post(self, request: Request) -> Response:
         """Verify Google OAuth authorization code or ID token, and return JWT tokens."""
@@ -527,5 +550,117 @@ class GoogleAuthView(APIView):
             {"user": user_data, "tokens": tokens},
             status=status.HTTP_201_CREATED if is_new else status.HTTP_200_OK,
         )
+
+
+class GoogleRedirectView(APIView):
+    """Initiate Google OAuth 2.0 flow by redirecting to Google authorization URL."""
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request: Request) -> Response | HttpResponseRedirect:
+        client_id = getattr(settings, "GOOGLE_CLIENT_ID", "").strip()
+        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:3000").rstrip("/")
+        default_redirect_uri = f"{frontend_url}/auth/callback"
+
+        redirect_uri = request.query_params.get("redirect_uri") or default_redirect_uri
+        next_url = request.query_params.get("next", "/dashboard")
+        is_json_request = (
+            request.query_params.get("format") == "json"
+            or request.query_params.get("json") == "true"
+        )
+
+        if not client_id:
+            error_msg = _("Google OAuth credentials are not configured on the server.")
+            if is_json_request:
+                return Response(
+                    {"error": error_msg},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+            return HttpResponseRedirect(
+                f"{frontend_url}/auth/login?error={urllib.parse.quote(str(error_msg))}",
+            )
+
+        params = {
+            "client_id": client_id,
+            "redirect_uri": redirect_uri,
+            "response_type": "code",
+            "scope": "openid email profile",
+            "access_type": "offline",
+            "prompt": "select_account",
+            "state": next_url,
+        }
+        google_auth_url = (
+            f"https://accounts.google.com/o/oauth2/v2/auth?{urllib.parse.urlencode(params)}"
+        )
+
+        if is_json_request:
+            return Response(
+                {"authorization_url": google_auth_url, "client_id": client_id},
+                status=status.HTTP_200_OK,
+            )
+
+        return HttpResponseRedirect(google_auth_url)
+
+
+class GoogleCallbackView(APIView):
+    """Handle direct OAuth redirect callback from Google on backend."""
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request: Request) -> HttpResponseRedirect:
+        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:3000").rstrip("/")
+        error = request.query_params.get("error")
+        error_description = request.query_params.get("error_description")
+        next_url = request.query_params.get("state") or "/dashboard"
+
+        if error:
+            msg = error_description or error or _("Google authentication was cancelled or failed.")
+            return HttpResponseRedirect(
+                f"{frontend_url}/auth/login?error={urllib.parse.quote(str(msg))}",
+            )
+
+        code = request.query_params.get("code")
+        if not code:
+            return HttpResponseRedirect(
+                f"{frontend_url}/auth/login?error=Missing+authorization+code",
+            )
+
+        callback_uri = request.build_absolute_uri(request.path)
+        user_info, err_resp = _exchange_google_code(code, callback_uri)
+        if err_resp or not user_info:
+            err_msg = "Failed to exchange authorization code with Google."
+            if err_resp and isinstance(err_resp.data, dict) and "error" in err_resp.data:
+                err_msg = str(err_resp.data["error"])
+            return HttpResponseRedirect(
+                f"{frontend_url}/auth/login?error={urllib.parse.quote(err_msg)}",
+            )
+
+        if not user_info.get("email"):
+            return HttpResponseRedirect(
+                f"{frontend_url}/auth/login?error=No+email+address+provided+by+Google",
+            )
+
+        email_verified = user_info.get("email_verified")
+        if isinstance(email_verified, str):
+            email_verified = email_verified.lower() in ("true", "1")
+        elif email_verified is None:
+            email_verified = True
+
+        if not email_verified:
+            return HttpResponseRedirect(
+                f"{frontend_url}/auth/login?error=Google+account+email+is+not+verified",
+            )
+
+        user, _is_new = _provision_google_user(user_info, request)
+        tokens = get_tokens_for_user(user)
+
+        target_url = (
+            f"{frontend_url}/auth/callback"
+            f"?access={urllib.parse.quote(tokens['access'])}"
+            f"&refresh={urllib.parse.quote(tokens['refresh'])}"
+            f"&next={urllib.parse.quote(next_url)}"
+        )
+        return HttpResponseRedirect(target_url)
+
 
 

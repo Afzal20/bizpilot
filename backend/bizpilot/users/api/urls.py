@@ -6,6 +6,8 @@ from rest_framework_simplejwt.views import TokenVerifyView
 
 from .views import ClaimPendingInvitesView
 from .views import GoogleAuthView
+from .views import GoogleCallbackView
+from .views import GoogleRedirectView
 from .views import LoginView
 from .views import LogoutView
 from .views import MeView
@@ -20,6 +22,9 @@ auth_patterns = [
     path("signup/", SignupView.as_view(), name="signup"),
     path("login/", LoginView.as_view(), name="login"),
     path("google/", GoogleAuthView.as_view(), name="google-auth"),
+    path("google/redirect/", GoogleRedirectView.as_view(), name="google-redirect"),
+    path("google/login/", GoogleRedirectView.as_view(), name="google-login"),
+    path("google/callback/", GoogleCallbackView.as_view(), name="google-callback"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("refresh/", TokenRefreshView.as_view(), name="token-refresh"),
     path("verify/", TokenVerifyView.as_view(), name="token-verify"),
