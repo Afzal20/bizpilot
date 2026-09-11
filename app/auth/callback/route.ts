@@ -13,6 +13,32 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/auth/login?error=${encodeURIComponent(msg)}`);
   }
 
+  const accessParam = searchParams.get("access");
+  const refreshParam = searchParams.get("refresh");
+  if (accessParam || refreshParam) {
+    const isSecure = request.url.startsWith("https://");
+    const response = NextResponse.redirect(`${origin}${next}`);
+    if (accessParam) {
+      response.cookies.set("bp_access_token", accessParam, {
+        httpOnly: true,
+        secure: isSecure,
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24, // 1 day
+      });
+    }
+    if (refreshParam) {
+      response.cookies.set("bp_refresh_token", refreshParam, {
+        httpOnly: true,
+        secure: isSecure,
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      });
+    }
+    return response;
+  }
+
   if (!code) {
     return NextResponse.redirect(`${origin}/auth/login?error=Missing+authorization+code`);
   }

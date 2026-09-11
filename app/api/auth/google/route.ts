@@ -1,12 +1,29 @@
 import { NextResponse } from "next/server";
 import { getApiBaseUrl } from "@/lib/api/client";
 
-export async function GET() {
-  const clientId =
-    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
-    process.env.GOOGLE_CLIENT_ID ||
-    "264361429871-d434kiurui3f08nkc80m7o9vvcn40gc3.apps.googleusercontent.com";
-  return NextResponse.json({ client_id: clientId });
+export async function GET(request: Request) {
+  const { searchParams, origin } = new URL(request.url);
+  const next = searchParams.get("next") || "/dashboard";
+  const redirectUri = `${origin}/auth/callback`;
+  const format = searchParams.get("format");
+
+  const backendRedirectUrl = `${getApiBaseUrl()}/auth/google/redirect/?redirect_uri=${encodeURIComponent(
+    redirectUri,
+  )}&next=${encodeURIComponent(next)}`;
+
+  if (format === "json" || request.headers.get("accept")?.includes("application/json")) {
+    try {
+      const res = await fetch(`${backendRedirectUrl}&format=json`);
+      if (res.ok) {
+        const data = await res.json();
+        return NextResponse.json(data);
+      }
+    } catch {
+      // fallback to redirect
+    }
+  }
+
+  return NextResponse.redirect(backendRedirectUrl);
 }
 
 export async function POST(request: Request) {

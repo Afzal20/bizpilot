@@ -41,8 +41,6 @@
     "@radix-ui/react-visually-hidden": "^1.2.4",
     "@react-pdf/renderer": "^4.3.2",
     "@stripe/stripe-js": "^9.15.0",
-    "@supabase/ssr": "latest",
-    "@supabase/supabase-js": "latest",
     "@tabler/icons-react": "^3.37.1",
     "@tanstack/react-table": "^8.21.3",
     "class-variance-authority": "^0.7.1",
@@ -79,7 +77,6 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.1",
-    "supabase": "^2.70.5",
     "tailwindcss": "^4.2.0",
     "typescript": "^5"
   }
