@@ -4,6 +4,7 @@ import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { ConditionalNavbar } from "@/components/conditional-navbar";
+import { GoogleAuthProvider } from "@/components/google-provider";
 
 
 const defaultUrl = process.env.VERCEL_URL
@@ -41,10 +42,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Suspense fallback={null}>
-            <ConditionalNavbar />
-          </Suspense>
-          {children}
+          <GoogleAuthProvider>
+            <Suspense fallback={null}>
+              <ConditionalNavbar />
+            </Suspense>
+            {children}
+          </GoogleAuthProvider>
         </ThemeProvider>
       </body>
     </html>

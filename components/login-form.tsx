@@ -15,6 +15,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { useGoogleLogin } from "@react-oauth/google";
 import { FieldDescription, FieldSeparator } from "./ui/field";
 
 export function LoginForm({
@@ -71,10 +72,39 @@ export function LoginForm({
     }
   };
 
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const res = await fetch("/api/auth/google", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id_token: tokenResponse.access_token }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to login with Google");
+        }
+        router.push("/dashboard");
+        router.refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Google login failed");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    onError: () => {
+      setError("Google authentication was cancelled or failed.");
+    },
+  });
+
   const handleGoogleLogin = () => {
-    setIsLoading(true);
-    setError(null);
-    window.location.href = "/api/auth/google";
+    try {
+      googleLogin();
+    } catch {
+      window.location.href = "/api/auth/google";
+    }
   };
 
   return (
