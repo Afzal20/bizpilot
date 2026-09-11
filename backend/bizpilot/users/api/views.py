@@ -380,6 +380,19 @@ def _exchange_google_code(  # noqa: PLR0911
 def _verify_google_id_token(
     id_token: str,
 ) -> tuple[dict[str, Any] | None, Response | None]:
+    # 1. Try userinfo endpoint first (works if id_token is an OAuth access_token from popup flow)
+    try:
+        userinfo_resp = requests.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {id_token}"},
+            timeout=10,
+        )
+        if userinfo_resp.status_code == status.HTTP_200_OK:
+            return userinfo_resp.json(), None
+    except requests.RequestException:
+        pass
+
+    # 2. Try tokeninfo endpoint (works if id_token is a Google JWT ID token)
     tokeninfo_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={id_token}"
     try:
         tokeninfo_resp = requests.get(tokeninfo_url, timeout=10)
@@ -506,7 +519,7 @@ class GoogleAuthView(APIView):
         data = request.data if isinstance(request.data, dict) else {}
         code = data.get("code")
         redirect_uri = data.get("redirect_uri", "")
-        id_token = data.get("id_token")
+        id_token = data.get("id_token") or data.get("access_token")
 
         if not code and not id_token:
             return Response(

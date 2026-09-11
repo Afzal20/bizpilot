@@ -217,3 +217,28 @@ class TestGoogleAuthEndpoints:
 
         assert response.status_code == HTTPStatus.BAD_REQUEST
         assert "code expired" in response.data.get("error", "")
+
+    @patch("bizpilot.users.api.views.requests.get")
+    def test_google_auth_access_token_flow(self, mock_get):
+        userinfo_response = MagicMock()
+        userinfo_response.status_code = 200
+        userinfo_response.json.return_value = {
+            "sub": "google-user-access-token-flow",
+            "email": "accesstokenuser@example.com",
+            "name": "Access Token User",
+            "picture": "",
+            "email_verified": True,
+        }
+        mock_get.return_value = userinfo_response
+
+        with override_settings(GOOGLE_CLIENT_ID="test-client-id"):
+            response = self.client.post(
+                self.url,
+                data={"id_token": "valid-oauth-access-token"},
+                format="json",
+            )
+
+        assert response.status_code == HTTPStatus.CREATED
+        assert response.data["user"]["email"] == "accesstokenuser@example.com"
+        assert User.objects.filter(email="accesstokenuser@example.com").exists()
+
