@@ -22,6 +22,7 @@ from bizpilot.ai.services import categorize_expense
 from bizpilot.ai.services import draft_payment_reminder
 from bizpilot.ai.services import generate_invoice_items
 from bizpilot.ai.services import stream_bizpilot
+from bizpilot.ai.gateway import AiUnavailableError
 from bizpilot.erp.models import Invoice
 from bizpilot.orgs.models import Organization
 from bizpilot.orgs.permissions import OrgPermission
@@ -48,6 +49,11 @@ class GenerateInvoiceItemsView(APIView):
             return Response(
                 {"error": err.message if hasattr(err, "message") else str(err)},
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+        except AiUnavailableError as err:
+            return Response(
+                {"error": str(err)},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
 
@@ -88,6 +94,11 @@ class AskBizPilotView(APIView):
             return Response(
                 {"error": err.message if hasattr(err, "message") else str(err)},
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+        except AiUnavailableError as err:
+            return Response(
+                {"error": str(err)},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
 

@@ -36,6 +36,14 @@ class AIGatewayTest(TestCase):
         text2 = '[{"a": 1}, {"b": 2}]'
         assert extract_json_array(text2) == [{"a": 1}, {"b": 2}]
 
+        # Dict wrapping items array
+        text3 = '{"items": [{"description": "Service", "quantity": 1, "rate": 500}]}'
+        assert extract_json_array(text3) == [{"description": "Service", "quantity": 1, "rate": 500}]
+
+        # Single item dict
+        text4 = '{"description": "Single service", "quantity": 2, "rate": 150}'
+        assert extract_json_array(text4) == [{"description": "Single service", "quantity": 2, "rate": 150}]
+
         # Invalid
         assert extract_json_array("no json here") is None
 

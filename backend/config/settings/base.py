@@ -455,7 +455,10 @@ STRIPE_WEBHOOK_SECRET = env.str(
     default="whsec_placeholder",
 )
 BILLING_ENFORCEMENT = env.bool("BILLING_ENFORCEMENT", default=True)
-OPENROUTER_API_KEY = env.str("OPENROUTER_API_KEY", default="")
+OPENROUTER_API_KEY = env.str(
+    "OPENROUTER_API_KEY",
+    default=env.str("OPEN_ROUTER_API_KEY", default=""),
+).strip()
 OPENROUTER_BASE_URL = env.str(
     "OPENROUTER_BASE_URL",
     default="https://openrouter.ai/api/v1/chat/completions",
@@ -463,6 +466,7 @@ OPENROUTER_BASE_URL = env.str(
 OPENAI_API_KEY = env.str("OPENAI_API_KEY", default="")
 AI_DEFAULT_MODELS = [
     "nvidia/nemotron-3-super-120b-a12b:free",
-    "z-ai/glm-5.2:free",
+    "liquid/lfm-2.5-2.6b:free",
+    "nex-agi/nex-n2.5-mini:free",
     "google/gemma-4-31b-it:free",
 ]

@@ -88,11 +88,11 @@ def generate_invoice_items(
 
     system_msg = (
         "You convert plain-language billing descriptions into invoice line items. "
-        "Return ONLY a JSON array, no prose. Each element: "
-        '{"description": string, "quantity": number, "rate": number (unit price in '
-        f"{target_currency})}}. "
+        "Return a JSON object with an 'items' key containing an array of line items. "
+        f"Each line item must have 'description' (string), 'quantity' (number), and 'rate' (unit price number in {target_currency}). "
+        f'Example: {{"items": [{{"description": "Web Development", "quantity": 1, "rate": 500}}]}}. '
         "Infer reasonable quantities and market rates when not explicitly stated. "
-        "Output at most 8 items."
+        "Output at most 8 items. Do not include markdown fences or conversational text outside the JSON."
     )
     messages = [
         {"role": "system", "content": system_msg},

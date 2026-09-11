@@ -51,7 +51,11 @@ class LLMProvider(Protocol):
 
 class OpenRouterProvider:
     def __init__(self, api_key: str | None = None) -> None:
-        self.api_key = api_key or getattr(settings, "OPENROUTER_API_KEY", "")
+        self.api_key = (
+            api_key
+            or getattr(settings, "OPENROUTER_API_KEY", "")
+            or getattr(settings, "OPEN_ROUTER_API_KEY", "")
+        ).strip()
         self.base_url = getattr(
             settings,
             "OPENROUTER_BASE_URL",
@@ -62,7 +66,8 @@ class OpenRouterProvider:
             "AI_DEFAULT_MODELS",
             [
                 "nvidia/nemotron-3-super-120b-a12b:free",
-                "z-ai/glm-5.2:free",
+                "liquid/lfm-2.5-2.6b:free",
+                "nex-agi/nex-n2.5-mini:free",
                 "google/gemma-4-31b-it:free",
             ],
         )
@@ -104,6 +109,17 @@ class OpenRouterProvider:
                     headers=headers,
                     timeout=45,
                 )
+                if not resp.ok and json_mode and resp.status_code == 400:
+                    # Retry without response_format if model lacks structured output support
+                    body_no_rf = dict(body)
+                    body_no_rf.pop("response_format", None)
+                    resp = requests.post(
+                        self.base_url,
+                        json=body_no_rf,
+                        headers=headers,
+                        timeout=45,
+                    )
+
                 if not resp.ok:
                     last_err = f"{model}: HTTP {resp.status_code}"
                     continue
@@ -267,7 +283,10 @@ class MockProvider:
 
 
 def get_llm_provider() -> LLMProvider:
-    api_key = getattr(settings, "OPENROUTER_API_KEY", "")
+    api_key = (
+        getattr(settings, "OPENROUTER_API_KEY", "")
+        or getattr(settings, "OPEN_ROUTER_API_KEY", "")
+    ).strip()
     if api_key:
         return OpenRouterProvider(api_key=api_key)
     return MockProvider()
@@ -311,17 +330,58 @@ def get_cached_or_complete(
 
 
 def extract_json_array(text: str) -> list[Any] | None:
+    if not text:
+        return None
     fenced = re.search(r"```(?:json)?\s*([\s\S]*?)```", text)
     candidate = (fenced.group(1) if fenced else text).strip()
+
+    # 1. Try parsing direct JSON
+    try:
+        parsed = json.loads(candidate)
+        if isinstance(parsed, list):
+            return parsed
+        if isinstance(parsed, dict):
+            for key in ("items", "line_items", "invoice_items", "data", "results"):
+                if key in parsed and isinstance(parsed[key], list):
+                    return parsed[key]
+            for val in parsed.values():
+                if isinstance(val, list) and val and isinstance(val[0], dict):
+                    return val
+            if "description" in parsed and ("rate" in parsed or "quantity" in parsed):
+                return [parsed]
+    except json.JSONDecodeError:
+        pass
+
+    # 2. Try finding array slice [ ... ]
     start = candidate.find("[")
     end = candidate.rfind("]")
-    if start == -1 or end == -1 or end <= start:
-        return None
-    try:
-        parsed = json.loads(candidate[start : end + 1])
-        return parsed if isinstance(parsed, list) else None
-    except json.JSONDecodeError:
-        return None
+    if start != -1 and end != -1 and end > start:
+        try:
+            parsed = json.loads(candidate[start : end + 1])
+            if isinstance(parsed, list):
+                return parsed
+        except json.JSONDecodeError:
+            pass
+
+    # 3. Try finding object slice { ... }
+    start_obj = candidate.find("{")
+    end_obj = candidate.rfind("}")
+    if start_obj != -1 and end_obj != -1 and end_obj > start_obj:
+        try:
+            parsed_obj = json.loads(candidate[start_obj : end_obj + 1])
+            if isinstance(parsed_obj, dict):
+                for key in ("items", "line_items", "invoice_items", "data", "results"):
+                    if key in parsed_obj and isinstance(parsed_obj[key], list):
+                        return parsed_obj[key]
+                for val in parsed_obj.values():
+                    if isinstance(val, list) and val and isinstance(val[0], dict):
+                        return val
+                if "description" in parsed_obj and ("rate" in parsed_obj or "quantity" in parsed_obj):
+                    return [parsed_obj]
+        except json.JSONDecodeError:
+            pass
+
+    return None
 
 
 def extract_json_object(text: str) -> dict[str, Any] | None:
