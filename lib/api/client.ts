@@ -546,10 +546,10 @@ export const billingApi = {
 // ==================== AI API ====================
 
 export const aiApi = {
-  async generateInvoiceItems(orgId: string, prompt: string): Promise<{ items: { description: string; quantity: number; rate: number }[] }> {
+  async generateInvoiceItems(orgId: string, prompt: string, currency?: string): Promise<{ items: { description: string; quantity: number; rate: number }[] }> {
     return apiClient<{ items: { description: string; quantity: number; rate: number }[] }>(`/orgs/${orgId}/ai/generate-items/`, {
       method: "POST",
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ prompt, currency }),
     });
   },
 

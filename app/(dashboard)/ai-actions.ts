@@ -31,8 +31,7 @@ export async function generateInvoiceItems(
     if (trimmed.length > 600)
       return { ok: false, error: "Please keep the description under 600 characters." };
 
-    const fullPrompt = `${trimmed} (currency: ${currency})`;
-    const res = await aiApi.generateInvoiceItems(ctx.org.id, fullPrompt);
+    const res = await aiApi.generateInvoiceItems(ctx.org.id, trimmed, currency);
 
     if (!res.items || res.items.length === 0)
       return { ok: false, error: "No usable line items were generated." };
