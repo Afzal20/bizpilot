@@ -108,9 +108,13 @@ export async function syncCheckoutSession(sessionId: string) {
   try {
     const { org } = await requireOrg();
     await billingApi.syncCheckoutSession(org.id, sessionId);
-    revalidatePath("/settings/billing");
-    revalidatePath("/dashboard");
-    revalidatePath("/", "layout");
+    try {
+      revalidatePath("/settings/billing");
+      revalidatePath("/dashboard");
+      revalidatePath("/", "layout");
+    } catch {
+      // Ignore if revalidatePath is called in an unsupported context
+    }
     return { success: true };
   } catch (err) {
     console.error("Billing sync checkout error:", err);

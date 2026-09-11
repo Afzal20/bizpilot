@@ -2,7 +2,6 @@ import { requireOrg } from "@/lib/erp/org";
 import { billingApi } from "@/lib/api/client";
 import { BillingPortalButton } from "@/components/erp/billing-portal-button";
 import { UpgradeButton } from "@/components/erp/upgrade-button";
-import { syncCheckoutSession } from "@/app/(dashboard)/actions/stripe";
 import { PricingCardSection } from "@/components/pricing/pricing-card-section";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -22,9 +21,11 @@ export default async function BillingSettingsPage({ searchParams }: BillingPageP
 
   let justUpgraded = false;
   if (session_id) {
-    const syncRes = await syncCheckoutSession(session_id);
-    if (syncRes.success) {
+    try {
+      await billingApi.syncCheckoutSession(org.id, session_id);
       justUpgraded = true;
+    } catch (err) {
+      console.error("Failed to sync checkout session on billing page:", err);
     }
   }
 
