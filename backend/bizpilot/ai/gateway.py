@@ -109,8 +109,12 @@ class OpenRouterProvider:
                     headers=headers,
                     timeout=45,
                 )
-                if not resp.ok and json_mode and resp.status_code == 400:
-                    # Retry without response_format if model lacks structured output support
+                if (
+                    not resp.ok
+                    and json_mode
+                    and resp.status_code == requests.codes.bad_request
+                ):
+                    # Retry without response_format if model lacks structured output
                     body_no_rf = dict(body)
                     body_no_rf.pop("response_format", None)
                     resp = requests.post(
@@ -205,6 +209,65 @@ class OpenRouterProvider:
                     continue
 
 
+def _mock_agent_content(user_content: str) -> str:
+    """Deterministic tool-call proposals for agent prompts."""
+    if "client" in user_content:
+        actions: list[dict[str, Any]] = [
+            {
+                "tool": "add_client",
+                "args": {"name": "Mock Client", "email": "mock@example.com"},
+            },
+        ]
+    elif "product" in user_content:
+        actions = [
+            {
+                "tool": "add_product",
+                "args": {"name": "Mock Product", "unit_price": 25},
+            },
+        ]
+    elif "payment" in user_content:
+        match = re.search(r"INV-[0-9]{4}-[A-Za-z0-9-]+", user_content)
+        actions = [
+            {
+                "tool": "record_payment",
+                "args": {
+                    "invoice_number": match.group(0) if match else "",
+                    "amount": 500,
+                },
+            },
+        ]
+    elif "invoice" in user_content:
+        actions = [
+            {
+                "tool": "create_invoice",
+                "args": {
+                    "client_name": "Mock Client",
+                    "items": [
+                        {
+                            "description": "Mock Service",
+                            "quantity": 2,
+                            "rate": 50,
+                        },
+                    ],
+                },
+            },
+        ]
+    elif "expense" in user_content:
+        actions = [
+            {
+                "tool": "add_expense",
+                "args": {
+                    "title": "Mock Expense",
+                    "amount": 60,
+                    "category": "supplies",
+                },
+            },
+        ]
+    else:
+        actions = []
+    return json.dumps({"reply": "Proposal ready.", "actions": actions})
+
+
 class MockProvider:
     """Mock LLM Provider for testing and local sandbox environments."""
 
@@ -221,8 +284,11 @@ class MockProvider:
             if m.get("role") == "user":
                 user_content = m.get("content", "")
 
+        # Agent tool-calling mock
+        if "Available tools" in str(messages):
+            res_content = _mock_agent_content(user_content)
         # Invoice items mock
-        if "invoice" in str(messages).lower() and "[" in user_content:
+        elif "invoice" in str(messages).lower() and "[" in user_content:
             res_content = json.dumps([
                 {
                     "description": "Website Design & Prototyping",
@@ -329,58 +395,48 @@ def get_cached_or_complete(
     return res
 
 
+def _find_array_in_dict(obj: dict[str, Any]) -> list[Any] | None:
+    for key in ("items", "line_items", "invoice_items", "data", "results"):
+        if key in obj and isinstance(obj[key], list):
+            return obj[key]
+    for val in obj.values():
+        if isinstance(val, list) and val and isinstance(val[0], dict):
+            return val
+    has_item_fields = "rate" in obj or "quantity" in obj
+    if "description" in obj and has_item_fields:
+        return [obj]
+    return None
+
+
+def _parse_json_slice(candidate: str, start_char: str, end_char: str) -> Any | None:
+    start, end = candidate.find(start_char), candidate.rfind(end_char)
+    if start != -1 and end > start:
+        try:
+            return json.loads(candidate[start : end + 1])
+        except json.JSONDecodeError:
+            pass
+    return None
+
+
 def extract_json_array(text: str) -> list[Any] | None:
     if not text:
         return None
     fenced = re.search(r"```(?:json)?\s*([\s\S]*?)```", text)
     candidate = (fenced.group(1) if fenced else text).strip()
 
-    # 1. Try parsing direct JSON
     try:
         parsed = json.loads(candidate)
-        if isinstance(parsed, list):
-            return parsed
-        if isinstance(parsed, dict):
-            for key in ("items", "line_items", "invoice_items", "data", "results"):
-                if key in parsed and isinstance(parsed[key], list):
-                    return parsed[key]
-            for val in parsed.values():
-                if isinstance(val, list) and val and isinstance(val[0], dict):
-                    return val
-            if "description" in parsed and ("rate" in parsed or "quantity" in parsed):
-                return [parsed]
     except json.JSONDecodeError:
-        pass
+        parsed = _parse_json_slice(
+            candidate,
+            "[",
+            "]",
+        ) or _parse_json_slice(candidate, "{", "}")
 
-    # 2. Try finding array slice [ ... ]
-    start = candidate.find("[")
-    end = candidate.rfind("]")
-    if start != -1 and end != -1 and end > start:
-        try:
-            parsed = json.loads(candidate[start : end + 1])
-            if isinstance(parsed, list):
-                return parsed
-        except json.JSONDecodeError:
-            pass
-
-    # 3. Try finding object slice { ... }
-    start_obj = candidate.find("{")
-    end_obj = candidate.rfind("}")
-    if start_obj != -1 and end_obj != -1 and end_obj > start_obj:
-        try:
-            parsed_obj = json.loads(candidate[start_obj : end_obj + 1])
-            if isinstance(parsed_obj, dict):
-                for key in ("items", "line_items", "invoice_items", "data", "results"):
-                    if key in parsed_obj and isinstance(parsed_obj[key], list):
-                        return parsed_obj[key]
-                for val in parsed_obj.values():
-                    if isinstance(val, list) and val and isinstance(val[0], dict):
-                        return val
-                if "description" in parsed_obj and ("rate" in parsed_obj or "quantity" in parsed_obj):
-                    return [parsed_obj]
-        except json.JSONDecodeError:
-            pass
-
+    if isinstance(parsed, list):
+        return parsed
+    if isinstance(parsed, dict):
+        return _find_array_in_dict(parsed)
     return None
 
 

@@ -11,18 +11,20 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from bizpilot.ai.agent import run_agent
+from bizpilot.ai.api.serializers import AgentSerializer
 from bizpilot.ai.api.serializers import AILogSerializer
 from bizpilot.ai.api.serializers import AskBizPilotSerializer
 from bizpilot.ai.api.serializers import CategorizeExpenseSerializer
 from bizpilot.ai.api.serializers import DraftPaymentReminderSerializer
 from bizpilot.ai.api.serializers import GenerateInvoiceItemsSerializer
+from bizpilot.ai.gateway import AiUnavailableError
 from bizpilot.ai.models import AILog
 from bizpilot.ai.services import ask_bizpilot
 from bizpilot.ai.services import categorize_expense
 from bizpilot.ai.services import draft_payment_reminder
 from bizpilot.ai.services import generate_invoice_items
 from bizpilot.ai.services import stream_bizpilot
-from bizpilot.ai.gateway import AiUnavailableError
 from bizpilot.erp.models import Invoice
 from bizpilot.orgs.models import Organization
 from bizpilot.orgs.permissions import OrgPermission
@@ -68,6 +70,7 @@ class AskBizPilotView(APIView):
 
         is_stream = serializer.validated_data.get("stream", False)
         question = serializer.validated_data["question"]
+        history = serializer.validated_data.get("history", [])
 
         try:
             if is_stream:
@@ -75,6 +78,7 @@ class AskBizPilotView(APIView):
                     organization=org,
                     question=question,
                     user=request.user,
+                    history=history,
                 )
                 response = StreamingHttpResponse(
                     generator,
@@ -88,8 +92,34 @@ class AskBizPilotView(APIView):
                 organization=org,
                 question=question,
                 user=request.user,
+                history=history,
             )
             return Response({"answer": answer}, status=status.HTTP_200_OK)
+        except ValidationError as err:
+            return Response(
+                {"error": err.message if hasattr(err, "message") else str(err)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class RunAgentView(APIView):
+    permission_classes = [permissions.IsAuthenticated, OrgPermission]
+    permission_map = {"post": "ai.use_assistant"}
+
+    def post(self, request: Any, org_id: str) -> Response:
+        org = get_object_or_404(Organization, id=org_id, is_active=True)
+        serializer = AgentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            res = run_agent(
+                organization=org,
+                instruction=serializer.validated_data["instruction"],
+                confirm=serializer.validated_data.get("confirm", False),
+                history=serializer.validated_data.get("history", []),
+                user=request.user,
+            )
+            return Response(res, status=status.HTTP_200_OK)
         except ValidationError as err:
             return Response(
                 {"error": err.message if hasattr(err, "message") else str(err)},

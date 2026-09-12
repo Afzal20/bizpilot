@@ -8,6 +8,7 @@ from typing import Any
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
+from bizpilot.ai.context import build_assistant_context
 from bizpilot.ai.gateway import extract_json_array
 from bizpilot.ai.gateway import extract_json_object
 from bizpilot.ai.gateway import get_cached_or_complete
@@ -15,7 +16,6 @@ from bizpilot.ai.gateway import get_llm_provider
 from bizpilot.ai.models import AILog
 from bizpilot.billing.engine import enforce
 from bizpilot.billing.engine import meter
-from bizpilot.erp.services import get_report_data
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -26,7 +26,8 @@ if TYPE_CHECKING:
 
 MIN_PROMPT_LEN = 4
 MAX_PROMPT_LEN = 600
-MAX_QUESTION_LEN = 500
+MAX_QUESTION_LEN = 2000
+MAX_HISTORY_MESSAGES = 8
 
 EXPENSE_CATEGORIES = [
     "Office Supplies",
@@ -89,10 +90,13 @@ def generate_invoice_items(
     system_msg = (
         "You convert plain-language billing descriptions into invoice line items. "
         "Return a JSON object with an 'items' key containing an array of line items. "
-        f"Each line item must have 'description' (string), 'quantity' (number), and 'rate' (unit price number in {target_currency}). "
-        f'Example: {{"items": [{{"description": "Web Development", "quantity": 1, "rate": 500}}]}}. '
+        f"Each line item must have 'description' (string), 'quantity' (number), "
+        f"and 'rate' (unit price number in {target_currency}). "
+        'Example: {"items": [{"description": "Web Development", "quantity": 1, '
+        '"rate": 500}]}. '
         "Infer reasonable quantities and market rates when not explicitly stated. "
-        "Output at most 8 items. Do not include markdown fences or conversational text outside the JSON."
+        "Output at most 8 items. Do not include markdown fences or "
+        "conversational text outside the JSON."
     )
     messages = [
         {"role": "system", "content": system_msg},
@@ -140,11 +144,32 @@ def generate_invoice_items(
     return cleaned_items
 
 
+def _assistant_system_msg(context: dict[str, Any]) -> str:
+    """Build the assistant system prompt from the data context."""
+    data_suffix = (
+        "Do not invent figures. Answer in the language of the question."
+        + chr(10) + chr(10) + "DATA:" + chr(10)
+    )
+    return (
+        "You are BizPilot, a sharp small-business analyst. Answer questions about "
+        "THIS business using only the JSON data provided below. "
+        f"Today's date is {context['today']}; use it to resolve relative periods "
+        "like 'this month' or 'last quarter'. "
+        "The data includes aggregates plus detailed records: clients with contact "
+        "details, products with stock, invoices with status and balance due, "
+        "payments, and expenses. "
+        "Be concise (max 150 words), specific with numbers, and practical. "
+        "If the data cannot answer the question, state so briefly. "
+        f"{data_suffix}{json.dumps(context)}"
+    )
+
+
 def ask_bizpilot(
     *,
     organization: Organization,
     question: str,
     user: User | None = None,
+    history: list[dict[str, str]] | None = None,
 ) -> str:
     """Answer business questions using live organizational report context."""
     enforce(organization, "ai_credits_per_month")
@@ -154,29 +179,17 @@ def ask_bizpilot(
         msg = _("Please ask a question.")
         raise ValidationError(msg)
     if len(trimmed) > MAX_QUESTION_LEN:
-        msg = _("Please keep your question under 500 characters.")
+        msg = _("Please keep your question under 2000 characters.")
         raise ValidationError(msg)
 
-    data = get_report_data(organization)
-    context = {
-        "organization": organization.name,
-        "currency": organization.default_currency or "USD",
-        "totals": data.get("totals", {}),
-        "monthly_last_6_months": data.get("monthly_series", [])[-6:],
-        "expense_by_category": data.get("expense_by_category", [])[:8],
-        "top_clients": data.get("top_clients", []),
-    }
+    history = history[-MAX_HISTORY_MESSAGES:] if history else []
 
-    system_msg = (
-        "You are BizPilot, a sharp small-business analyst. Answer questions about "
-        "THIS business using only the JSON data provided below. "
-        "Be concise (max 150 words), specific with numbers, and practical. "
-        "If the data cannot answer the question, state so briefly. "
-        "Do not invent figures.\n\nDATA:\n"
-        f"{json.dumps(context)}"
-    )
+    context = build_assistant_context(organization)
+
+    system_msg = _assistant_system_msg(context)
     messages = [
         {"role": "system", "content": system_msg},
+        *history,
         {"role": "user", "content": trimmed},
     ]
 
@@ -201,6 +214,7 @@ def stream_bizpilot(
     organization: Organization,
     question: str,
     user: User | None = None,
+    history: list[dict[str, str]] | None = None,
 ) -> Generator[str]:
     """Stream BizPilot assistant answer via SSE."""
     enforce(organization, "ai_credits_per_month")
@@ -210,24 +224,14 @@ def stream_bizpilot(
         msg = _("Please ask a question.")
         raise ValidationError(msg)
 
-    data = get_report_data(organization)
-    context = {
-        "organization": organization.name,
-        "currency": organization.default_currency or "USD",
-        "totals": data.get("totals", {}),
-        "monthly_last_6_months": data.get("monthly_series", [])[-6:],
-        "expense_by_category": data.get("expense_by_category", [])[:8],
-        "top_clients": data.get("top_clients", []),
-    }
+    history = history[-MAX_HISTORY_MESSAGES:] if history else []
 
-    system_msg = (
-        "You are BizPilot, a sharp small-business analyst. Answer questions about "
-        "THIS business using only the JSON data provided below. "
-        "Be concise (max 150 words), specific with numbers, and practical.\n\nDATA:\n"
-        f"{json.dumps(context)}"
-    )
+    context = build_assistant_context(organization)
+
+    system_msg = _assistant_system_msg(context)
     messages = [
         {"role": "system", "content": system_msg},
+        *history,
         {"role": "user", "content": trimmed},
     ]
 

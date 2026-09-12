@@ -7,6 +7,7 @@ from bizpilot.ai.api.views import AskBizPilotView
 from bizpilot.ai.api.views import CategorizeExpenseView
 from bizpilot.ai.api.views import DraftPaymentReminderView
 from bizpilot.ai.api.views import GenerateInvoiceItemsView
+from bizpilot.ai.api.views import RunAgentView
 
 app_name = "ai"
 
@@ -20,6 +21,11 @@ urlpatterns = [
         "orgs/<uuid:org_id>/ai/assistant/",
         AskBizPilotView.as_view(),
         name="assistant",
+    ),
+    path(
+        "orgs/<uuid:org_id>/ai/agent/",
+        RunAgentView.as_view(),
+        name="agent",
     ),
     path(
         "orgs/<uuid:org_id>/ai/categorize-expense/",

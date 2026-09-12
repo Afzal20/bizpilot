@@ -38,11 +38,13 @@ class AIGatewayTest(TestCase):
 
         # Dict wrapping items array
         text3 = '{"items": [{"description": "Service", "quantity": 1, "rate": 500}]}'
-        assert extract_json_array(text3) == [{"description": "Service", "quantity": 1, "rate": 500}]
+        expected3 = [{"description": "Service", "quantity": 1, "rate": 500}]
+        assert extract_json_array(text3) == expected3
 
         # Single item dict
         text4 = '{"description": "Single service", "quantity": 2, "rate": 150}'
-        assert extract_json_array(text4) == [{"description": "Single service", "quantity": 2, "rate": 150}]
+        expected4 = [{"description": "Single service", "quantity": 2, "rate": 150}]
+        assert extract_json_array(text4) == expected4
 
         # Invalid
         assert extract_json_array("no json here") is None
