@@ -1,6 +1,20 @@
-# Separate git repos living in the workspace (not part of this monorepo)
-invoive_generator-next/
+# Monorepo tooling and artifacts
 .playwright-mcp/
+
+# Frontend dependencies and build output
+invoive_generator-next/node_modules/
+invoive_generator-next/.next/
+invoive_generator-next/out/
+invoive_generator-next/build/
+invoive_generator-next/.env*.local
+invoive_generator-next/.env
+invoive_generator-next/*.tsbuildinfo
+invoive_generator-next/next-env.d.ts
+invoive_generator-next/playwright-report/
+invoive_generator-next/test-results/
+invoive_generator-next/server.log
+invoive_generator-next/.pytest_cache/
+invoive_generator-next/.playwright-mcp/
 
 # OS / editor
 .DS_Store
