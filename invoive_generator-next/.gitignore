@@ -1,0 +1,95 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*.local
+.env
+.env.development
+.env.production
+.env.staging
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# supabase
+supabase/.temp
+supabase/.branches
+
+# server logs
+*.log
+server.log
+logs/
+
+# playwright
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
+# selenium
+tests/selenium/screenshots/
+tests/selenium/setup.sh
+
+# ide
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# os
+Thumbs.db
+.DS_Store
+._*
+
+# sensitive files
+opencode.json
+
+# build artifacts
+dist/
+.cache/
+
+# debug files
+*.debug
+*.map
+
+
+SaaS_REPORT.md
+TECHNICAL_ANALYSIS.md
+
+.playwright-mcp
+
+DJANGO_MIGRATION_PLAN.md

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You're Invited</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        .header {
+            background-color: #000000;
+            padding: 24px;
+            text-align: center;
+        }
+        .header-title {
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+        .content {
+            padding: 32px 24px;
+        }
+        .greeting {
+            font-size: 16px;
+            color: #000000;
+            margin: 0 0 16px 0;
+            line-height: 1.5;
+        }
+        .message {
+            font-size: 14px;
+            color: #404040;
+            margin: 0 0 24px 0;
+            line-height: 1.6;
+        }
+        .site-box {
+            background-color: #fafafa;
+            border: 1px solid #e5e5e5;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 24px 0;
+            text-align: center;
+        }
+        .site-label {
+            font-size: 12px;
+            color: #737373;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 0 8px 0;
+            font-weight: 600;
+        }
+        .site-url {
+            font-size: 16px;
+            color: #000000;
+            font-weight: 600;
+            margin: 0;
+            word-break: break-all;
+        }
+        .button-container {
+            text-align: center;
+            margin: 32px 0;
+        }
+        .button {
+            display: inline-block;
+            background-color: #000000;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            transition: background-color 0.2s;
+        }
+        .button:hover {
+            background-color: #262626;
+        }
+        .info-box {
+            background-color: #fafafa;
+            border: 1px solid #e5e5e5;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 24px 0;
+        }
+        .info-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #000000;
+            margin: 0 0 8px 0;
+        }
+        .info-list {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 13px;
+            color: #525252;
+            line-height: 1.6;
+        }
+        .info-list li {
+            margin-bottom: 4px;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e5e5e5;
+            margin: 24px 0;
+            border: none;
+        }
+        .footer {
+            padding: 24px;
+            text-align: center;
+            background-color: #fafafa;
+            border-top: 1px solid #e5e5e5;
+        }
+        .footer-text {
+            font-size: 12px;
+            color: #737373;
+            margin: 0 0 8px 0;
+            line-height: 1.5;
+        }
+        .footer-link {
+            color: #000000;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 24px 16px;
+            }
+            .header {
+                padding: 20px 16px;
+            }
+            .header-title {
+                font-size: 20px;
+            }
+            .button {
+                padding: 12px 24px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1 class="header-title">You're Invited!</h1>
+        </div>
+        
+        <div class="content">
+            <p class="greeting">Hello,</p>
+            
+            <p class="message">
+                You have been invited to join our platform and create an account. We're excited to have you on board!
+            </p>
+            
+            <div class="site-box">
+                <p class="site-label">Platform</p>
+                <p class="site-url">{{ .SiteURL }}</p>
+            </div>
+            
+            <div class="button-container">
+                <a href="{{ .ConfirmationURL }}" class="button">Accept Invitation</a>
+            </div>
+            
+            <div class="info-box">
+                <p class="info-title">What's Next:</p>
+                <ul class="info-list">
+                    <li>Click the button above to accept the invitation</li>
+                    <li>Set up your account credentials</li>
+                    <li>Start exploring the platform</li>
+                    <li>This invitation link expires in 7 days</li>
+                </ul>
+            </div>
+            
+            <hr class="divider">
+            
+            <p class="message">
+                If you weren't expecting this invitation, you can safely ignore this email.
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p class="footer-text">
+                This is an automated message. Please do not reply to this email.
+            </p>
+            <p class="footer-text">
+                Need help? <a href="#" class="footer-link">Contact Support</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Re-authentication Required</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        .header {
+            background-color: #000000;
+            padding: 24px;
+            text-align: center;
+        }
+        .header-title {
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+        .content {
+            padding: 32px 24px;
+        }
+        .alert-box {
+            background-color: #fff5f5;
+            border-left: 4px solid #dc2626;
+            padding: 16px;
+            margin-bottom: 24px;
+            border-radius: 4px;
+        }
+        .alert-text {
+            color: #dc2626;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 0;
+            line-height: 1.5;
+        }
+        .greeting {
+            font-size: 16px;
+            color: #000000;
+            margin: 0 0 16px 0;
+            line-height: 1.5;
+        }
+        .message {
+            font-size: 14px;
+            color: #404040;
+            margin: 0 0 24px 0;
+            line-height: 1.6;
+        }
+        .code-container {
+            background-color: #f9f9f9;
+            border: 2px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin: 24px 0;
+        }
+        .code-label {
+            font-size: 12px;
+            color: #737373;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 0 12px 0;
+            font-weight: 600;
+        }
+        .code {
+            font-size: 32px;
+            font-weight: 700;
+            color: #000000;
+            letter-spacing: 4px;
+            margin: 0;
+            font-family: 'Courier New', monospace;
+        }
+        .info-box {
+            background-color: #fafafa;
+            border: 1px solid #e5e5e5;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 24px 0;
+        }
+        .info-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #000000;
+            margin: 0 0 8px 0;
+        }
+        .info-list {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 13px;
+            color: #525252;
+            line-height: 1.6;
+        }
+        .info-list li {
+            margin-bottom: 4px;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e5e5e5;
+            margin: 24px 0;
+            border: none;
+        }
+        .footer {
+            padding: 24px;
+            text-align: center;
+            background-color: #fafafa;
+            border-top: 1px solid #e5e5e5;
+        }
+        .footer-text {
+            font-size: 12px;
+            color: #737373;
+            margin: 0 0 8px 0;
+            line-height: 1.5;
+        }
+        .footer-link {
+            color: #000000;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 24px 16px;
+            }
+            .header {
+                padding: 20px 16px;
+            }
+            .header-title {
+                font-size: 20px;
+            }
+            .code {
+                font-size: 28px;
+                letter-spacing: 3px;
+            }
+            .code-container {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1 class="header-title">Security Verification</h1>
+        </div>
+        
+        <div class="content">
+            <div class="alert-box">
+                <p class="alert-text">⚠ Re-authentication Required</p>
+            </div>
+            
+            <p class="greeting">Hello,</p>
+            
+            <p class="message">
+                For your security, we need to verify your identity. Please use the verification code below to complete the re-authentication process.
+            </p>
+            
+            <div class="code-container">
+                <p class="code-label">Verification Code</p>
+                <p class="code">{{ .Token }}</p>
+            </div>
+            
+            <div class="info-box">
+                <p class="info-title">Important Information:</p>
+                <ul class="info-list">
+                    <li>This code expires in 10 minutes</li>
+                    <li>Do not share this code with anyone</li>
+                    <li>If you didn't request this, please ignore this email</li>
+                </ul>
+            </div>
+            
+            <hr class="divider">
+            
+            <p class="message">
+                If you did not initiate this request, please contact our support team immediately.
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p class="footer-text">
+                This is an automated security message. Please do not reply to this email.
+            </p>
+            <p class="footer-text">
+                Need help? <a href="#" class="footer-link">Contact Support</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
