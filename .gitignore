@@ -1,5 +1,6 @@
 # Monorepo tooling and artifacts
 .playwright-mcp/
+.git_frontend_bak/
 
 # Frontend dependencies and build output
 invoive_generator-next/node_modules/
