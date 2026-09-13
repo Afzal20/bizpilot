@@ -39,8 +39,8 @@ node_modules/
 # Curated documentation screenshots are versioned alongside the README.
 !docs/assets/
 !docs/assets/screenshots/
-!docs/assets/screenshots/billing/
-!docs/assets/screenshots/billing/*.png
+!docs/assets/screenshots/**
+!docs/assets/screenshots/**/*.png
 
 # Docs build
 docs/_build/
